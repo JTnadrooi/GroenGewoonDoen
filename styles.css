@@ -1,6 +1,6 @@
 body {
-    background-color: #1e1e1e;
-    color: #cfcfcf;
+    background-color: #ffffff;
+    color: #000000;
     font-family: Arial, sans-serif;
     margin: 20px;
 }
@@ -12,4 +12,8 @@ a {
 
 a:hover {
     text-decoration: underline;
+}
+
+table, th, td {
+  border:1px solid black;
 }
