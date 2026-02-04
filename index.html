@@ -8,50 +8,63 @@
 </head>
 
 <body>
-    <h1>Klantzijde (Gebruikers)</h1>
-    <header>
-        <h2>Groen & Gewoon Doen</h2><br>
-        <p>Welkom!</p>
-        <p>Bestel uw tuinservice eevoudig online!</p>
-    </header>
-    <article>
-        <h2>Standaard Paketten</h2>
-        <label for="Paketten">Kies een Paket</label>
-            <select name="Paket" id="Paketten">
-                <option value="Paket1">Paket 1</option>
-                <option value="Paket2">Paket 2</option>
-                <option value="Paket3">Paket 3</option>
-                <option value="Paket4">Paket 4</option>
-            </select>
+    <h1>Customer Side (Users)</h1>
 
-            <button>Bestel</button>
-    </article><br>
+    <header>
+        <h2>Green & Just Do It</h2><br>
+        <p>Welcome!</p>
+        <p>Order your garden services easily online!</p>
+    </header>
+
+    <article>
+        <h2>Standard Packages</h2>
+
+        <label for="packages">Choose a Package</label>
+        <select name="package" id="packages">
+            <option value="package1">Package 1</option>
+            <option value="package2">Package 2</option>
+            <option value="package3">Package 3</option>
+            <option value="package4">Package 4</option>
+        </select>
+
+        <button>Order</button>
+    </article>
+
+    <br>
+
     <aside>
-        <h2>Custom offerte</h2>
+        <h2>Custom Quote</h2>
         <form>
-            <label for="fname">m² Gras</label>
-            <input type="text" id="gras" name="gras"><br><br>
-            <label for="lname">m² Tegels</label>
-            <input type="text" id="tegels" name="tegels"><br><br>
-            <label for="lname">Meters Heg</label>
-            <input type="text" id="Heg" name="lHeg"><br><br>
-            <input type="checkbox" id="opties" name="opties" value="opties">
-            <label for="vehicle1">Opties</label><br>
-            <input type="checkbox" id="opties" name="opties" value="opties">
-            <label for="vehicle1">Opties</label><br>
-            <input type="submit" value="Bereken offerte">
+            <label for="grass">m² Grass</label>
+            <input type="text" id="grass" name="grass"><br><br>
+
+            <label for="tiles">m² Tiles</label>
+            <input type="text" id="tiles" name="tiles"><br><br>
+
+            <label for="hedge">Meters of Hedge</label>
+            <input type="text" id="hedge" name="hedge"><br><br>
+
+            <input type="checkbox" id="option1" name="options" value="option1">
+            <label for="option1">Options</label><br>
+
+            <input type="checkbox" id="option2" name="options" value="option2">
+            <label for="option2">Options</label><br>
+
+            <input type="submit" value="Calculate Quote">
         </form>
     </aside>
+
     <aside>
-        <h2>Mijn Orders</h2> <button>Bestel</button>
-        
+        <h2>My Orders</h2>
+        <button>Order</button>
+
         <table style="width:100%">
             <tr>
                 <th>Order ID</th>
-                <th>Pakket/Info</th>
-                <th>offerte</th>
+                <th>Package / Info</th>
+                <th>Quote</th>
                 <th>Status</th>
-                <th>Datum</th>
+                <th>Date</th>
             </tr>
             <tr>
                 <td></td>
@@ -67,11 +80,11 @@
                 <td></td>
                 <td></td>
             </tr>
-            
         </table>
     </aside>
+
     <footer>
-        <p>Contact|Social Media|Dissclaimer</p>
+        <p>Contact | Social Media | Disclaimer</p>
     </footer>
 
     <a href="admin.html">Go to admin page</a>
