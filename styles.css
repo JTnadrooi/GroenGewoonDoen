@@ -1,13 +1,10 @@
-body {
-    background-color: #ffffff;
-    color: #000000;
-    font-family: Arial, sans-serif;
-    margin: 20px;
+/* body {
+    background-color: #4c4a55;
+    color: #cfcfcf;
 }
 
 a {
     color: #7aa2d6;
-    text-decoration: none;
 }
 
 a:hover {
