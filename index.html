@@ -1,18 +1,94 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <title>Home</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Home</title>
+
+  <!-- The main CSS -->
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- Fold script -->
+  <script src="js/FoldMenu.js" defer></script>
 </head>
 
 <body>
-    <h1>Hello world</h1>
+  <h1>Customer Side (Users)</h1>
 
-    <a href="admin.html">Go to admin page</a>
+  <header data-fold>
+    <h2>Green & Just Do It</h2><br />
+    <p>Welcome!</p>
+    <p>Order your garden services easily online!</p>
+  </header>
 
-    <script src="js/main.js"></script>
+  <article data-fold>
+    <h2>Standard Packages</h2>
+
+    <label for="packages">Choose a Package</label>
+    <select name="package" id="packages">
+      <option value="package1">Package 1</option>
+      <option value="package2">Package 2</option>
+      <option value="package3">Package 3</option>
+      <option value="package4">Package 4</option>
+    </select>
+
+    <button>Order</button>
+  </article>
+
+  <br />
+
+  <article data-fold>
+    <h2>Custom Quote</h2>
+    <form>
+      <label for="grass">m² Grass</label>
+      <input type="text" id="grass" name="grass" /><br /><br />
+
+      <label for="tiles">m² Tiles</label>
+      <input type="text" id="tiles" name="tiles" /><br /><br />
+
+      <label for="hedge">Meters of Hedge</label>
+      <input type="text" id="hedge" name="hedge" /><br /><br />
+
+      <input type="checkbox" id="option1" name="options" value="option1" />
+      <label for="option1">Options</label><br />
+
+      <input type="checkbox" id="option2" name="options" value="option2" />
+      <label for="option2">Options</label><br />
+
+      <input type="submit" value="Calculate Quote" />
+    </form>
+  </article>
+
+  <article data-fold>
+    <h2>My Orders</h2>
+    <button>Order</button>
+
+    <table style="width: 100%">
+      <tr>
+        <th>Order ID</th>
+        <th>Package / Info</th>
+        <th>Quote</th>
+        <th>Status</th>
+        <th>Date</th>
+      </tr>
+      <tr>
+        <td></td><td></td><td></td><td></td><td></td>
+      </tr>
+      <tr>
+        <td></td><td></td><td></td><td></td><td></td>
+      </tr>
+    </table>
+  </article>
+
+  <!-- Make footer collapsible too if you want (optional).
+       Remove data-fold if you don't want it foldable. -->
+  <footer data-fold>
+    <p>Contact | Social Media | Disclaimer</p>
+  </footer>
+
+  <a href="admin.html">Go to admin page</a>
+
+  <!-- script -->
+  <script src="js/main.js"></script>
 </body>
-
 </html>
