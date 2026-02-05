@@ -5,21 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Home</title>
 
-  <!-- The main CSS -->
   <link rel="stylesheet" href="styles.css" />
 
-  <!-- Fold script -->
+  <!-- Shared header FIRST, then fold script -->
+  <script src="js/siteHeader.js" defer></script>
   <script src="js/FoldMenu.js" defer></script>
 </head>
 
 <body>
   <h1>Customer Side (Users)</h1>
-
-  <header data-fold>
-    <h2>Green & Just Do It</h2><br />
-    <p>Welcome!</p>
-    <p>Order your garden services easily online!</p>
-  </header>
 
   <article data-fold>
     <h2>Standard Packages</h2>
@@ -80,15 +74,12 @@
     </table>
   </article>
 
-  <!-- Make footer collapsible too if you want (optional).
-       Remove data-fold if you don't want it foldable. -->
   <footer data-fold>
     <p>Contact | Social Media | Disclaimer</p>
   </footer>
 
   <a href="admin.html">Go to admin page</a>
 
-  <!-- script -->
   <script src="js/main.js"></script>
 </body>
 </html>
