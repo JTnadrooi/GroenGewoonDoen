@@ -13,4 +13,285 @@ a:hover {
 
 table, th, td {
   border:1px solid black;
+} */
+
+/* ===== Groen Gewoon Doen – refined green UI ===== */
+:root{
+  --g3:#1f7a4b;
+  --g4:#155d38;
+  --g5:#0f3f27;
+
+  --bg:#f6f7f8;
+  --card:#ffffff;
+  --txt:#111a14;
+  --mut:#516057;
+  --line:rgba(17,26,20,.12);
+
+  --shadow: 0 14px 40px rgba(0,0,0,.10);
+  --shadow2: 0 10px 22px rgba(0,0,0,.08);
+  --r:14px;
+}
+
+*{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; }
+
+body{
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  color:var(--txt);
+  background: var(--bg);
+  line-height:1.45;
+  padding: 28px 18px 42px;
+  max-width: 980px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* subtle grey slice + soft green tint */
+body::before{
+  content:"";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(115deg, rgba(0,0,0,.04) 0%, rgba(0,0,0,.04) 22%, transparent 22%, transparent 100%),
+    radial-gradient(900px 380px at 20% 0%, rgba(31,122,75,.10), transparent 65%),
+    radial-gradient(700px 320px at 90% 10%, rgba(31,122,75,.07), transparent 60%);
+  z-index: -1;
+}
+
+h1{
+  margin: 0 0 16px;
+  font-size: clamp(22px, 2.2vw, 30px);
+  letter-spacing: .2px;
+  font-weight: 800;
+}
+
+a{ color:var(--g4); text-decoration:none; font-weight:650; }
+a:hover{ text-decoration:underline; }
+
+/* ===== HOME HEADER card (kept separate so our admin spacing rules don't override it) ===== */
+header{
+  background:
+    linear-gradient(135deg, rgba(31,122,75,.16), rgba(255,255,255,.90) 55%),
+    var(--card);
+  border: 1px solid var(--line);
+  border-radius: calc(var(--r) + 2px);
+  padding: 18px 18px;
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+}
+header h2{
+  margin: 0;
+  font-size: 20px;
+  color: var(--g5);
+  font-weight: 850;
+  letter-spacing: .2px;
+}
+header p{
+  margin: 6px 0 0;
+  color: var(--mut);
+  font-weight: 520;
+}
+
+/* ===== FOLD heading styling (clickable row) ===== */
+[data-fold] > :is(h1,h2,h3,h4,h5,h6){
+  cursor:pointer; user-select:none;
+  display:flex; align-items:center; justify-content:space-between;
+  gap:.65rem; margin:0;
+
+  /* enough vertical room so arrow pill never clips */
+  padding: 12px 12px;
+  line-height: 1.2;
+  min-height: 44px;
+
+  border-radius: 12px;
+  background: linear-gradient(90deg, rgba(31,122,75,.12), transparent 70%);
+  border: 1px solid transparent;
+  transition: background .18s ease, border-color .18s ease, transform .18s ease;
+  font-weight: 850;
+  letter-spacing: .15px;
+}
+[data-fold] > :is(h1,h2,h3,h4,h5,h6):hover{
+  background: linear-gradient(90deg, rgba(31,122,75,.18), transparent 75%);
+  border-color: rgba(31,122,75,.22);
+  transform: translateY(-1px);
+}
+[data-fold] > :is(h1,h2,h3,h4,h5,h6)::after{
+  content:"▾";
+  width: 34px;
+  height: 32px;
+  position: relative;
+  top: 1px;
+
+  display:grid;
+  place-items:center;
+  border-radius: 999px;
+  background: rgba(31,122,75,.14);
+  border: 1px solid rgba(31,122,75,.25);
+  transition: transform .2s ease, background .18s ease, border-color .18s ease;
+}
+[data-fold] > :is(h1,h2,h3,h4,h5,h6):hover::after{
+  background: rgba(31,122,75,.20);
+  border-color: rgba(31,122,75,.32);
+}
+[data-fold].is-collapsed > :is(h1,h2,h3,h4,h5,h6)::after{
+  transform: rotate(-90deg);
+}
+
+/* fold content wrapper created by JS */
+.fold-body{
+  overflow:hidden;
+  height:auto;
+  opacity:1;
+  transition: height .26s ease, opacity .2s ease;
+
+  /* IMPORTANT: guaranteed bottom breathing room inside every fold block */
+  padding-bottom: 14px;
+}
+
+/* ===== CARD styling for fold blocks ===== */
+/* Apply to any fold block that is a direct body section, EXCEPT header/footer (they have their own styling). */
+body > [data-fold]:not(header):not(footer){
+  background: var(--card) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: var(--r) !important;
+  padding: 14px 16px !important;
+  box-shadow: var(--shadow2) !important;
+
+  /* IMPORTANT: spacing between sections (fixes admin nudging) */
+  margin: 16px 0 !important;
+
+  position: relative;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+/* subtle top highlight line */
+body > [data-fold]:not(header):not(footer)::before{
+  content:"";
+  position:absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: rgba(255,255,255,.7);
+  border-top-left-radius: var(--r);
+  border-top-right-radius: var(--r);
+}
+
+body > [data-fold]:not(header):not(footer):hover{
+  transform: translateY(-2px);
+  box-shadow: 0 18px 45px rgba(0,0,0,.12);
+  border-color: rgba(31,122,75,.28);
+}
+
+/* Footer */
+footer{
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: var(--r);
+  border: 1px solid var(--line);
+  background: rgba(0,0,0,.03);
+  color: var(--mut);
+  box-shadow: 0 8px 18px rgba(0,0,0,.06);
+}
+
+/* ===== Forms ===== */
+label{
+  display:block;
+  margin: 10px 0 6px;
+  font-size: 13px;
+  color: var(--mut);
+  font-weight: 650;
+  letter-spacing: .1px;
+}
+
+input[type="text"], input[type="number"], select{
+  width: 100%;
+  max-width: 440px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(17,26,20,.16);
+  background: #fff;
+  color: var(--txt);
+  outline: none;
+  transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+input[type="text"]:focus, input[type="number"]:focus, select:focus{
+  border-color: rgba(31,122,75,.55);
+  box-shadow: 0 0 0 4px rgba(31,122,75,.14);
+}
+select{ cursor:pointer; }
+
+input[type="checkbox"]{
+  width: 18px; height: 18px;
+  vertical-align: middle;
+  accent-color: var(--g3);
+  margin-right: 8px;
+}
+
+/* ===== Buttons ===== */
+button, input[type="submit"]{
+  appearance:none;
+  border: 1px solid rgba(31,122,75,.40);
+  background: linear-gradient(180deg, var(--g3), var(--g4));
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-weight: 800;
+  letter-spacing: .2px;
+  cursor:pointer;
+
+  margin-top: 12px;
+  margin-bottom: 10px; /* ensures buttons never nudge against the next content */
+
+  box-shadow: 0 12px 22px rgba(21,93,56,.20);
+  transition: transform .14s ease, box-shadow .14s ease, filter .14s ease;
+}
+button:hover, input[type="submit"]:hover{
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+  box-shadow: 0 16px 30px rgba(21,93,56,.24);
+}
+button:active, input[type="submit"]:active{
+  transform: translateY(0px) scale(.99);
+}
+button:focus-visible, input[type="submit"]:focus-visible,
+[data-fold] > :is(h1,h2,h3,h4,h5,h6):focus-visible{
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(31,122,75,.16);
+}
+
+/* ===== Tables ===== */
+table{
+  border-collapse: separate;
+  border-spacing: 0;
+  width:100%;
+  margin-top: 12px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(17,26,20,.14);
+}
+
+/* override HTML border="1" */
+table[border]{ border: 1px solid rgba(17,26,20,.14); }
+
+th, td{
+  padding: 10px 10px;
+  text-align:left;
+  border-bottom: 1px solid rgba(17,26,20,.08);
+  font-size: 14px;
+}
+th{
+  background: linear-gradient(180deg, rgba(31,122,75,.14), rgba(31,122,75,.08));
+  color: var(--g5);
+  font-weight: 850;
+}
+tr:last-child td{ border-bottom:none; }
+tr:hover td{ background: rgba(31,122,75,.06); }
+
+/* If you want the <br> after the header h2 to still show, DELETE the line below. */
+br{ display:none; }
+
+@media (prefers-reduced-motion: reduce){
+  .fold-body{ transition:none; }
+  body > [data-fold]:not(header):not(footer),
+  [data-fold] > :is(h1,h2,h3,h4,h5,h6){ transition:none; }
 }
