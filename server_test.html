@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+    <h1 id="output">Awaiting response..</h1>
+
+    <script>
+        fetch('http://localhost:3000/message')
+            .then(res => res.text())
+            .then(data => document.getElementById('output').innerText = data);
+    </script>
+</body>
+
+</html>
