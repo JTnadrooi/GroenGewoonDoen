@@ -23,9 +23,23 @@
   </header>
 
   <article data-fold>
+    <h2>Choose Package Type</h2>
+    <p>Choose between standard or custom package!</p>
+
+   <input type="checkbox" id="standard" name="standardPackage" value="standard" />
+    <label for="standard">Standard package</label>
+
+  <input type="checkbox" id="custom" name="customPackage" value="custom" />
+    <label for="custom">Custom package</label>
+  <input type="submit" value="Choose"/>
+    
+  </article>
+
+  <article data-fold>
     <h2>Standard Packages</h2>
 
     <label for="packages">Choose a Package</label>
+    <P>With standard packages you can choose from four different services.</P>
     <select name="package" id="packages">
       <option value="package1">Package 1</option>
       <option value="package2">Package 2</option>
@@ -41,20 +55,28 @@
   <article data-fold>
     <h2>Custom Quote</h2>
     <form>
+      <p>Make your custom package!</p>
+      <p>With custom packages you can create your own package with services according to your wishes.</p>
+
       <label for="grass">m² Grass</label>
+      <p>enter the m² of your lawn</p>
       <input type="text" id="grass" name="grass" /><br /><br />
 
       <label for="tiles">m² Tiles</label>
+      <p>enter the m² of your path</p>
       <input type="text" id="tiles" name="tiles" /><br /><br />
-
+      
       <label for="hedge">Meters of Hedge</label>
+      <p>enter the height of the hedge</p>
       <input type="text" id="hedge" name="hedge" /><br /><br />
 
+      <h3>Added services</h3>
+      <p>Added services already have a fixed price. You must select the service you want to add. This option is optional.</p>
       <input type="checkbox" id="option1" name="options" value="option1" />
-      <label for="option1">Options</label><br />
+      <label for="option1">Weeding €50</label><br />
 
       <input type="checkbox" id="option2" name="options" value="option2" />
-      <label for="option2">Options</label><br />
+      <label for="option2">clearing leaves €70</label><br />
 
       <input type="submit" value="Calculate Quote" />
     </form>
@@ -95,7 +117,7 @@
     <p>Contact | Social Media | Disclaimer</p>
   </footer>
 
-  <a href="../admin.html">Go to admin page</a>
+  <a href="../html/admin.html">Go to admin page</a>
 
   <!-- script -->
   <script src="../js/main.js"></script>
