@@ -23,41 +23,21 @@
   </header>
 
   <article data-fold>
-    <h2>Standard Packages</h2>
+    <h2>Packages</h2>
 
     <label for="packages">Choose a Package</label>
-    <select name="package" id="packages">
-      <option value="package1">Package 1</option>
-      <option value="package2">Package 2</option>
-      <option value="package3">Package 3</option>
-      <option value="package4">Package 4</option>
-    </select>
+    <select id="packages"></select>
 
-    <button>Order</button>
-  </article>
+    <p id="packageDescription" style="margin:8px 0; font-style: italic;"></p>
 
-  <br />
+    <label for="area">Garden Size (m²)</label>
+    <input type="number" id="area" min="0" step="1" placeholder="Enter m²" />
 
-  <article data-fold>
-    <h2>Custom Quote</h2>
-    <form>
-      <label for="grass">m² Grass</label>
-      <input type="text" id="grass" name="grass" /><br /><br />
+    <h3 style="margin-top:10px;">
+      Total: $<span id="totalPrice">0.00</span>
+    </h3>
 
-      <label for="tiles">m² Tiles</label>
-      <input type="text" id="tiles" name="tiles" /><br /><br />
-
-      <label for="hedge">Meters of Hedge</label>
-      <input type="text" id="hedge" name="hedge" /><br /><br />
-
-      <input type="checkbox" id="option1" name="options" value="option1" />
-      <label for="option1">Options</label><br />
-
-      <input type="checkbox" id="option2" name="options" value="option2" />
-      <label for="option2">Options</label><br />
-
-      <input type="submit" value="Calculate Quote" />
-    </form>
+    <button onclick="placeOrder()">Order</button>
   </article>
 
   <article data-fold>
