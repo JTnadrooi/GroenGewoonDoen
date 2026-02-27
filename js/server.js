@@ -12,42 +12,61 @@ app.use(express.json());
 const packagesPath = path.join(__dirname, '../data/packages.json');
 const ordersPath = path.join(__dirname, '../data/orders.json');
 
-
 app.get('/packages', async (req, res) => {
+  try {
     const data = await fs.readFile(packagesPath, 'utf-8');
     res.json(JSON.parse(data));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to load packages' });
+  }
 });
-
 
 app.post('/orders', async (req, res) => {
-    try {
-        const { packageId, area, total } = req.body;
+  try {
+    const { userId, duration } = req.body;
 
-        const raw = await fs.readFile(ordersPath, 'utf-8');
-        const db = JSON.parse(raw);
-
-        const newOrder = {
-            id: Date.now(),
-            packageId,
-            area,
-            total,
-            status: 'pending',
-            date: new Date().toISOString()
-        };
-
-        db.orders.push(newOrder);
-
-        await fs.writeFile(ordersPath, JSON.stringify(db, null, 2));
-
-        res.status(201).json(newOrder);
-
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Failed to save order' });
+    if (!userId || typeof duration !== 'number') {
+      return res.status(400).json({ error: 'Invalid order data' });
     }
+
+    let db;
+    try {
+      const raw = await fs.readFile(ordersPath, 'utf-8');
+      db = JSON.parse(raw);
+    } catch {
+      db = { orders: [] };
+    }
+
+    const newOrder = {
+      id: Date.now(),
+      userId,
+      duration, // in decimal hours
+      date: new Date().toISOString()
+    };
+
+    db.orders.push(newOrder);
+
+    await fs.writeFile(ordersPath, JSON.stringify(db, null, 2));
+
+    res.status(201).json(newOrder);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to save order' });
+  }
 });
 
+app.get('/orders', async (req, res) => {
+  try {
+    const raw = await fs.readFile(ordersPath, 'utf-8');
+    const db = JSON.parse(raw);
+    res.json(db.orders || []);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to load orders' });
+  }
+});
 
 app.listen(PORT, () =>
-    console.log(`Server running on http://localhost:${PORT}`)
+  console.log(`Server running on http://localhost:${PORT}`)
 );

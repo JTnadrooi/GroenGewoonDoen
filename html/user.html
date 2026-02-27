@@ -22,23 +22,20 @@
     <p>Order your garden services easily online!</p>
   </header>
 
-  <article data-fold>
-    <h2>Packages</h2>
+  <main data-fold>
+    <h2>Order a Package</h2>
 
-    <label for="packages">Choose a Package</label>
+    <label for="packages">Select Package:</label>
     <select id="packages"></select>
 
-    <p id="packageDescription" style="margin:8px 0; font-style: italic;"></p>
+    <p id="packageDescription"></p>
 
-    <label for="area">Garden Size (m²)</label>
-    <input type="number" id="area" min="0" step="1" placeholder="Enter m²" />
+    <label for="orderDate">Select Date & Time:</label>
+    <input type="datetime-local" id="orderDate">
+    <button id="placeOrderBtn" type="button">Place Order</button>
 
-    <h3 style="margin-top:10px;">
-      Total: $<span id="totalPrice">0.00</span>
-    </h3>
-
-    <button onclick="placeOrder()">Order</button>
-  </article>
+    <p id="orderInfo"></p>
+  </main>
 
   <article data-fold>
     <h2>My Orders</h2>

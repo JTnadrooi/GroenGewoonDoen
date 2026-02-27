@@ -4,19 +4,19 @@
             "id": "basic",
             "name": "Basic Lawn Care",
             "costPerM2": 2.50,
-            "description": "Regular mowing, edging, and debris removal to keep your lawn tidy and bla bla gpt gpt gpt"
+            "description": "Regular mowing to keep your lawn tidy."
         },
         {
             "id": "cleanup",
             "name": "Seasonal Cleanup",
             "costPerM2": 3.20,
-            "description": "Leaf removal, pruning of small shrubs, weeding, and general garden cleanup for seasonal transitions."
+            "description": "General garden cleanup for seasonal transitions."
         },
         {
             "id": "soil_revi",
             "name": "Soil Revitalization",
             "costPerM2": 4.10,
-            "description": "Soil testing, aeration, compost enrichment, and fertilization to improve plant growth and soil health."
+            "description": "Soil testing, compost enrichment, and fertilization to improve plant growth and soil health."
         },
         {
             "id": "plant_landscape",
@@ -40,7 +40,7 @@
             "id": "luxury",
             "name": "Luxury Landscape Transformation",
             "costPerM2": 12.50,
-            "description": "Full redesign service with hardscaping elements, decorative plants, lighting, and bla bla more gpt gpt gpt galore"
+            "description": "Full redesign service with hardscaping elements."
         },
         {
             "id": "gold_grass",
