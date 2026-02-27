@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Sign Up - GroenGewoonDoen</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+
+  <header id="site-header"></header>
+
+  <main class="page-main">
+    <section class="login-card">
+      <h1>Create account</h1>
+
+      <form id="signupForm" action="/signup" method="post" novalidate>
+        <label for="name">Full name</label>
+        <input id="name" name="name" type="text" placeholder="Your name" required>
+
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" placeholder="you@domain.com" required>
+
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" placeholder="•••••••" required>
+
+        <label for="confirm">Confirm password</label>
+        <input id="confirm" name="confirm" type="password" placeholder="•••••••" required>
+
+        <div class="form-row">
+          <button type="submit" class="btn-primary">Sign up</button>
+        </div>
+
+        <div id="error" class="form-error" aria-live="polite"></div>
+      </form>
+
+      <p class="muted">
+        Already have an account? <a href="/login">Log in</a><br>
+        <a href="/">Back to homepage</a>
+      </p>
+    </section>
+  </main>
+
+  <script src="../js/siteHeader.js"></script>
+  <script>
+    (function(){
+      var form = document.getElementById('signupForm');
+      var errorEl = document.getElementById('error');
+
+      form.addEventListener('submit', async function(ev){
+        if (!window.fetch) return;
+        ev.preventDefault();
+        errorEl.textContent = '';
+
+        var name = document.getElementById('name').value.trim();
+        var email = document.getElementById('email').value.trim();
+        var password = document.getElementById('password').value;
+        var confirm = document.getElementById('confirm').value;
+
+        if (!name || !email || !password || !confirm) {
+          errorEl.textContent = 'All fields are required.';
+          return;
+        }
+        if (password !== confirm) {
+          errorEl.textContent = 'Passwords do not match.';
+          return;
+        }
+
+        try {
+          var res = await fetch('/signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: name, email: email, password: password })
+          });
+          if (!res.ok) {
+            var err = await res.json().catch(function(){ return { message: res.statusText }; });
+            throw new Error(err.message || 'Signup failed');
+          }
+          var data = await res.json().catch(function(){ return {}; });
+          window.location.href = data.redirect || '/login';
+        } catch (e) {
+          errorEl.textContent = e.message || 'Signup failed';
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
