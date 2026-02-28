@@ -13,7 +13,7 @@ const gardenSizeInput = document.getElementById('gardenSize');
 const customDurationContainer = document.getElementById('customDurationContainer');
 const customDurationInput = document.getElementById('customDuration');
 const costPredictionEl = document.getElementById('costPrediction');
-
+const ordersTableBody = document.getElementById('ordersTableBody');
 let packagesCache = [];
 
 // Helper to GET from API
@@ -32,6 +32,54 @@ async function apiPost(path, body) {
     });
     if (!res.ok) throw new Error('POST failed: ' + res.status);
     return res.json();
+}
+
+// Load and render orders
+async function loadOrders() {
+    try {
+        const orders = await apiGet('/orders');
+
+        // show only this user's orders
+        const myOrders = orders.filter(o => o.userId === USER_ID);
+
+        ordersTableBody.innerHTML = '';
+
+        if (!myOrders.length) {
+            ordersTableBody.innerHTML = `
+                <tr>
+                    <td colspan="5" style="text-align:center">No orders yet</td>
+                </tr>
+            `;
+            return;
+        }
+
+        myOrders.forEach(order => {
+            const row = document.createElement('tr');
+
+            const quote = order.quote
+                ? `$${order.quote}`
+                : (order.duration ? `${order.duration.toFixed(2)}h` : '-');
+
+            row.innerHTML = `
+                <td>${order.id}</td>
+                <td>${order.packageName || '-'}</td>
+                <td>${quote}</td>
+                <td class="status">${order.status || 'pending'}</td>
+                <td>${new Date(order.date).toLocaleString()}</td>
+            `;
+
+            // simple status colors
+            const statusCell = row.querySelector('.status');
+            if (order.status === 'completed') statusCell.style.color = 'green';
+            else if (order.status === 'pending') statusCell.style.color = 'orange';
+            else if (order.status === 'cancelled') statusCell.style.color = 'red';
+
+            ordersTableBody.appendChild(row);
+        });
+
+    } catch (err) {
+        console.error('Failed to load orders:', err);
+    }
 }
 
 // Load packages from API and render
@@ -157,14 +205,16 @@ async function placeOrder() {
         });
 
         orderInfo.textContent = `Order placed! ID: ${order.id}, Duration: ${duration.toFixed(2)}h, Date: ${new Date(order.date).toLocaleString()}`;
+
+        await loadOrders();
     } catch (err) {
         alert('Failed to place order: ' + err.message);
     }
 }
 
-// Event listeners
 document.addEventListener('DOMContentLoaded', () => {
     loadPackages();
+    loadOrders();
 
     packageSelect.addEventListener('change', updateUI);
     gardenSizeInput.addEventListener('input', updateCostPrediction);

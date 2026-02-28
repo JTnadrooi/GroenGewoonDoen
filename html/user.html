@@ -50,33 +50,23 @@
 
     <p id="orderInfo"></p>
   </main>
-
   <article data-fold>
     <h2>My Orders</h2>
-    <button>Order</button>
 
     <table style="width: 100%">
-      <tr>
-        <th>Order ID</th>
-        <th>Package / Info</th>
-        <th>Quote</th>
-        <th>Status</th>
-        <th>Date</th>
-      </tr>
-      <tr>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
+      <thead>
+        <tr>
+          <th>Order ID</th>
+          <th>Package / Info</th>
+          <th>Quote</th>
+          <th>Status</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+
+      <tbody id="ordersTableBody">
+        <!-- JS inserts rows here -->
+      </tbody>
     </table>
   </article>
 
