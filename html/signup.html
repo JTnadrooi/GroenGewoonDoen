@@ -1,11 +1,13 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Sign Up - GroenGewoonDoen</title>
   <link rel="stylesheet" href="../css/styles.css">
 </head>
+
 <body>
 
   <header id="site-header"></header>
@@ -14,7 +16,7 @@
     <section class="login-card">
       <h1>Create account</h1>
 
-      <form id="signupForm" action="/signup" method="post" novalidate>
+      <form id="signupForm" action="/newuser" method="post" novalidate>
         <label for="name">Full name</label>
         <input id="name" name="name" type="text" placeholder="Your name" required>
 
@@ -43,11 +45,11 @@
 
   <script src="../js/siteHeader.js"></script>
   <script>
-    (function(){
+    (function () {
       var form = document.getElementById('signupForm');
       var errorEl = document.getElementById('error');
 
-      form.addEventListener('submit', async function(ev){
+      form.addEventListener('submit', async function (ev) {
         if (!window.fetch) return;
         ev.preventDefault();
         errorEl.textContent = '';
@@ -73,10 +75,10 @@
             body: JSON.stringify({ name: name, email: email, password: password })
           });
           if (!res.ok) {
-            var err = await res.json().catch(function(){ return { message: res.statusText }; });
+            var err = await res.json().catch(function () { return { message: res.statusText }; });
             throw new Error(err.message || 'Signup failed');
           }
-          var data = await res.json().catch(function(){ return {}; });
+          var data = await res.json().catch(function () { return {}; });
           window.location.href = data.redirect || '/login';
         } catch (e) {
           errorEl.textContent = e.message || 'Signup failed';
@@ -85,4 +87,5 @@
     })();
   </script>
 </body>
+
 </html>

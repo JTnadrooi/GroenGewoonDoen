@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Green & Just Do It</title>
+
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="../css/styles.css" />
+</head>
+
+<body>
+
+    <header data-fold>
+        <h1>Green & Just Do It</h1>
+        <img src="../media/heleblijetuinman.png">
+        <p>Welcome to our garden service platform.</p>
+        <p>Choose a package, request a quote, or log in to manage your orders.</p>
+    </header>
+
+    <main data-fold>
+        <h2>What we offer</h2>
+        <ul>
+            <li>Standard packages for quick services</li>
+            <li>Custom quotes based on your garden size</li>
+            <li>Easy booking and tracking</li>
+        </ul>
+    </main>
+
+    <section data-fold>
+        <h2>Get Started</h2>
+        <button id="loginBtn">Login</button>
+    </section>
+
+    <footer data-fold>
+        <p>Contact | Social Media | Disclaimer</p>
+    </footer>
+
+    <script>
+        document.getElementById("loginBtn").addEventListener("click", () => {
+            window.location.href = "user.html";
+        });
+    </script>
+
+</body>
+
+</html>

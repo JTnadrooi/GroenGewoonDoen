@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <title>Admin</title>
-  <link rel="stylesheet" href="styles.css" />
 
-  <!-- Shared header FIRST, then fold script -->
-  <script src="js/siteHeader.js" defer></script>
-  <script src="js/FoldMenu.js" defer></script>
+  <link rel="stylesheet" href="../css/styles.css" />
+  <script src="../js/FoldMenu.js" defer></script>
+  <script src="../js/main.js" defer></script>
+  <script src="../js/calendar.js" defer></script>
 </head>
 
 <body>
-    <h1>Admin Side</h1>
   <div data-fold>
     <h3>Orders</h3>
     <table border="1">
@@ -132,6 +132,23 @@
     <button>Save</button>
   </div>
 
+<div data-fold>
+  <h3>Availability Calendar</h3>
+
+  <table border="1" cellpadding="8" cellspacing="0">
+    <thead>
+      <tr>
+        <th>Day</th>
+        <th>Date</th>
+        <th>Status</th>
+        <th>Details</th>
+      </tr>
+    </thead>
+    <tbody id="admin-calendar-body">
+      </tbody>
+  </table>
+</div>
+
   <div data-fold>
     <h3>Tile Prices</h3>
 
@@ -153,4 +170,5 @@
   <br><br>
   <button>Logout</button>
 </body>
+
 </html>

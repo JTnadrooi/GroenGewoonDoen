@@ -66,6 +66,20 @@ h1{
   font-weight: 800;
 }
 
+article p{
+  margin: 6px 0 0;
+  color: var(--mut);
+  font-weight: 520;
+  font-size: small;
+}
+
+article h3{
+  margin: 0 0 16px;
+  font-size: clamp(22px, 2.2vw, 20px);
+  letter-spacing: .2px;
+  font-weight: 500;
+}
+
 a{ color:var(--g4); text-decoration:none; font-weight:650; }
 a:hover{ text-decoration:underline; }
 

@@ -1,0 +1,52 @@
+{
+    "gardeningPackages": [
+        {
+            "id": "basic",
+            "name": "Basic Lawn Care",
+            "costPerM2": 2.50,
+            "description": "Regular mowing to keep your lawn tidy."
+        },
+        {
+            "id": "cleanup",
+            "name": "Seasonal Cleanup",
+            "costPerM2": 3.20,
+            "description": "General garden cleanup for seasonal transitions."
+        },
+        {
+            "id": "soil_revi",
+            "name": "Soil Revitalization",
+            "costPerM2": 4.10,
+            "description": "Soil testing, compost enrichment, and fertilization to improve plant growth and soil health."
+        },
+        {
+            "id": "plant_landscape",
+            "name": "Planting & Landscaping",
+            "costPerM2": 6.75,
+            "description": "Design and installation of flowers, shrubs, and small trees to enhance the garden's appearance."
+        },
+        {
+            "id": "pest_weed",
+            "name": "Pest & Weed Control",
+            "costPerM2": 3.95,
+            "description": "Targeted treatment for weeds, insects, and common garden pests using safe and eco-friendly methods."
+        },
+        {
+            "id": "premium",
+            "name": "Premium Garden Maintenance",
+            "costPerM2": 7.80,
+            "description": "Comprehensive care including mowing, pruning, fertilizing, pest control, and irrigation monitoring."
+        },
+        {
+            "id": "luxury",
+            "name": "Luxury Landscape Transformation",
+            "costPerM2": 12.50,
+            "description": "Full redesign service with hardscaping elements."
+        },
+        {
+            "id": "gold_grass",
+            "name": "Gold Plated Grass",
+            "costPerM2": 9999.50,
+            "description": "We will pour liquid gold all over your garden."
+        }
+    ]
+}

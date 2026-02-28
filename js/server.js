@@ -8,10 +8,8 @@ const PORT = process.env.PORT || 3000;
 const fs = require('fs');
 const crypto = require('crypto');
 
-// path to user data file
 const usersFile = path.join(__dirname, '..', 'data', 'users.json');
 
-// helpers for user storage
 function readUsers() {
   try {
     var txt = fs.readFileSync(usersFile, 'utf8');
@@ -34,33 +32,15 @@ function hashPassword(password, salt) {
 app.use(cors());
 app.use(express.json());
 
-// Serve static folders (so /css, /js, /media, /html work)
-app.use(express.static(path.join(__dirname, "..")));
-
-// Homepage -> your html/index.html
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "..", "html", "index.html"));
 });
 
-// Existing test route
 app.get("/message", (req, res) => {
   res.send("Ahoy!");
 });
 
-// login and signup pages (convenience endpoints)
-app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'html', 'login.html'));
-});
-app.get('/signup', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'html', 'signup.html'));
-});
-// admin interface (after login)
-app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'html', 'admin.html'));
-});
-
-// handle signup submissions
-app.post('/signup', (req, res) => {
+app.post('/newuser', (req, res) => {
   var { name, email, password } = req.body || {};
   if (!email || !password) {
     return res.status(400).json({ message: 'Email and password required' });
@@ -75,7 +55,6 @@ app.post('/signup', (req, res) => {
   return res.json({ redirect: '/login' });
 });
 
-// handle login submissions
 app.post('/login', (req, res) => {
   var { email, password } = req.body || {};
   if (!email || !password) {
@@ -90,10 +69,67 @@ app.post('/login', (req, res) => {
   if (h.hash !== u.hash) {
     return res.status(401).json({ message: 'Invalid credentials' });
   }
-  // on successful login, redirect to admin interface
   return res.json({ redirect: '/admin' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+const packagesPath = path.join(__dirname, '../data/packages.json');
+const ordersPath = path.join(__dirname, '../data/orders.json');
+
+app.get('/packages', async (req, res) => {
+  try {
+    const data = await fs.readFile(packagesPath, 'utf-8');
+    res.json(JSON.parse(data));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to load packages' });
+  }
 });
+
+app.post('/orders', async (req, res) => {
+  try {
+    const { userId, duration } = req.body;
+
+    if (!userId || typeof duration !== 'number') {
+      return res.status(400).json({ error: 'Invalid order data' });
+    }
+
+    let db;
+    try {
+      const raw = await fs.readFile(ordersPath, 'utf-8');
+      db = JSON.parse(raw);
+    } catch {
+      db = { orders: [] };
+    }
+
+    const newOrder = {
+      id: Date.now(),
+      userId,
+      duration,
+      date: new Date().toISOString()
+    };
+
+    db.orders.push(newOrder);
+
+    await fs.writeFile(ordersPath, JSON.stringify(db, null, 2));
+
+    res.status(201).json(newOrder);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to save order' });
+  }
+});
+
+app.get('/orders', async (req, res) => {
+  try {
+    const raw = await fs.readFile(ordersPath, 'utf-8');
+    const db = JSON.parse(raw);
+    res.json(db.orders || []);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to load orders' });
+  }
+});
+
+app.listen(PORT, () =>
+  console.log(`Server running on http://localhost:${PORT}`)
+);

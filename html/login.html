@@ -1,12 +1,13 @@
-
 <!doctype html>
 <html lang="en">
+
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>Login - GroenGewoonDoen</title>
 	<link rel="stylesheet" href="../css/styles.css">
 </head>
+
 <body>
 
 	<header id="site-header"></header>
@@ -31,21 +32,21 @@
 			</form>
 
 			<p class="muted">
-			<a href="/">Back to homepage</a> |
-			<a href="/html/signup.html">Create account</a>
-		</p>
+				<a href="/">Back to homepage</a> |
+				<a href="/html/signup.html">Create account</a>
+			</p>
 		</section>
 	</main>
-    </header>
+	</header>
 
 	<script src="../js/siteHeader.js"></script>
 	<script>
 		// progressive client-side login handler
-		(function(){
+		(function () {
 			var form = document.getElementById('loginForm');
 			var errorEl = document.getElementById('error');
 
-			form.addEventListener('submit', async function(ev){
+			form.addEventListener('submit', async function (ev) {
 				if (!window.fetch) return; // let browser submit form if fetch unavailable
 				ev.preventDefault();
 				errorEl.textContent = '';
@@ -66,11 +67,11 @@
 					});
 
 					if (!res.ok) {
-						var err = await res.json().catch(function(){ return { message: res.statusText }; });
+						var err = await res.json().catch(function () { return { message: res.statusText }; });
 						throw new Error(err.message || 'Login failed');
 					}
 
-					var data = await res.json().catch(function(){ return {}; });
+					var data = await res.json().catch(function () { return {}; });
 					// server may return { redirect: '/admin.html' } on success
 					window.location.href = data.redirect || '/';
 				} catch (e) {
@@ -80,4 +81,5 @@
 		})();
 	</script>
 </body>
+
 </html>
