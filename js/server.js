@@ -24,7 +24,7 @@ app.get('/packages', async (req, res) => {
 
 app.post('/orders', async (req, res) => {
   try {
-    const { userId, duration } = req.body;
+    const { userId, duration, date } = req.body;
 
     if (!userId || typeof duration !== 'number') {
       return res.status(400).json({ error: 'Invalid order data' });
@@ -42,7 +42,7 @@ app.post('/orders', async (req, res) => {
       id: Date.now(),
       userId,
       duration, // in decimal hours
-      date: new Date().toISOString()
+      date: date
     };
 
     db.orders.push(newOrder);
