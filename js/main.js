@@ -82,24 +82,21 @@ async function loadOrders() {
     }
 }
 
-// Load packages from API and render
 async function loadPackages() {
     try {
         const data = await apiGet('/packages');
         packagesCache = data.gardeningPackages || [];
 
-        // Always add "Custom" package
         const customPackage = {
             id: 'custom',
             name: 'Custom',
             description: 'Enter your own duration in hours',
-            costPerM2: 0 // no automatic cost
+            costPerM2: 0
         };
         packagesCache.push(customPackage);
 
         renderPackages();
 
-        // Select first package by default
         packageSelect.value = packagesCache[0].id;
         updateUI();
         updateCostPrediction();
@@ -127,8 +124,13 @@ function getSelectedPackage() {
     return packagesCache.find(p => p.id === id);
 }
 
+async function getRateFor(rateId) {
+    const data = await apiGet('/rates');
+    return data.find(r => r.id == rateId).costPer;
+}
+
 // Update UI based on selected package
-function updateUI() {
+async function updateUI() {
     const pkg = getSelectedPackage();
     descriptionEl.textContent = pkg ? pkg.description : '';
 
@@ -140,11 +142,11 @@ function updateUI() {
         gardenSizeContainer.style.display = 'block';
     }
 
-    updateCostPrediction();
+    await updateCostPrediction();
 }
 
 // Update cost prediction dynamically
-function updateCostPrediction() {
+async function updateCostPrediction() {
     const pkg = getSelectedPackage();
 
     if (!pkg) {
@@ -152,20 +154,30 @@ function updateCostPrediction() {
         return;
     }
 
+    let duration, cost;
+
+    const hourlyRate = await getRateFor("hourly");
+
     if (pkg.id === 'custom') {
-        const customDuration = parseFloat(customDurationInput.value);
-        costPredictionEl.textContent = (!isNaN(customDuration) && customDuration > 0)
-            ? `Custom duration: ${customDuration.toFixed(2)} hours`
-            : 'Enter your desired duration to see prediction';
+        duration = parseFloat(customDurationInput.value);
+
+        cost = hourlyRate * duration;
+
+        costPredictionEl.textContent =
+            `Estimated cost (excluding resources): $${cost.toFixed(2)}, Duration: ${duration.toFixed(2)} hours`;
     } else {
         const size = parseFloat(gardenSizeInput.value);
+
         if (isNaN(size) || size <= 0) {
             costPredictionEl.textContent = '';
             return;
         }
-        const cost = pkg.costPerM2 * size;
-        const duration = cost / 10;
-        costPredictionEl.textContent = `Estimated cost: $${cost.toFixed(2)}, Duration: ${duration.toFixed(2)} hours`;
+
+        duration = Math.ceil(size * 0.45);
+        cost = pkg.costPerM2 * size + hourlyRate * duration;
+
+        costPredictionEl.textContent =
+            `Estimated cost: $${cost.toFixed(2)}, Duration: ${duration.toFixed(2)} hours`;
     }
 }
 

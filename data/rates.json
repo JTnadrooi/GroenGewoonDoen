@@ -1,0 +1,8 @@
+{
+    "rates": [
+        {
+            "id": "hourly",
+            "costPer": 60
+        }
+    ]
+}

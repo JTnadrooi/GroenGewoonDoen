@@ -11,6 +11,7 @@ app.use(express.json());
 
 const packagesPath = path.join(__dirname, '../data/packages.json');
 const ordersPath = path.join(__dirname, '../data/orders.json');
+const ratesPath = path.join(__dirname, '../data/rates.json');
 
 app.get('/packages', async (req, res) => {
   try {
@@ -64,6 +65,17 @@ app.get('/orders', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to load orders' });
+  }
+});
+
+app.get('/rates', async (req, res) => {
+  try {
+    const raw = await fs.readFile(ratesPath, 'utf-8');
+    const db = JSON.parse(raw);
+    res.json(db.rates || []);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to load rates' });
   }
 });
 
