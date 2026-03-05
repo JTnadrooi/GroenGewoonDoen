@@ -24,7 +24,10 @@ async function updateAdminCalendar() {
     try {
         // Fetch data from JSON file
         const response = await fetch('../data/orders.json'); 
-        const customerOrders = await response.json();
+        const jsonData = await response.json();
+        
+        // Pakt specifiek de 'orders' array uit je JSON
+        const customerOrders = jsonData.orders; 
 
         const datesToDisplay = getCurrentWeek();
         tbody.innerHTML = '';
@@ -37,7 +40,11 @@ async function updateAdminCalendar() {
             const dayName = rowDate.toLocaleDateString('en-US', { weekday: 'long' });
             const dayNumber = rowDate.getDay(); // 0 = Sunday, 6 = Saturday
 
-            const existingOrder = customerOrders.find(order => order.date === dateStr);
+            // Check if order exists. We split the order.date to ignore the time (e.g., T22:07:40.643Z)
+            const existingOrder = customerOrders.find(order => {
+                const orderDateOnly = order.date.split('T')[0];
+                return orderDateOnly === dateStr;
+            });
             
             let status = 'Available';
             let details = '-';
@@ -53,7 +60,8 @@ async function updateAdminCalendar() {
             // 2. Check if there is an order for weekdays
             else if (existingOrder) {
                 status = 'Occupied';
-                details = `Client: ${existingOrder.tenant} (ID: ${existingOrder.id})`;
+                // Aangepast naar existingOrder.userId
+                details = `Client: ${existingOrder.userId} (ID: ${existingOrder.id})`;
                 rowStyle = 'background-color: #ffcccc; font-weight: bold;';
             } 
             // 3. Check if the date has passed
