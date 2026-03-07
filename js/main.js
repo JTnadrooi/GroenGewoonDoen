@@ -154,6 +154,15 @@ async function updateCostPrediction() {
         return;
     }
 
+    if (pkg.id === 'custom' && !customDurationInput.value.trim()) {
+        costPredictionEl.textContent = '';
+        return;
+    }
+
+    if (pkg.id !== 'custom' && !gardenSizeInput.value.trim()) {
+        costPredictionEl.textContent = '';
+        return;
+    }
     let duration, cost;
 
     const hourlyRate = await getRateFor("hourly");
