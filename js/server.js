@@ -42,7 +42,7 @@ app.post('/orders', async (req, res) => {
     const newOrder = {
       id: Date.now(),
       userId,
-      duration, // in decimal hours
+      duration, // in decimal hours.
       date: date
     };
 

@@ -1,7 +1,6 @@
 const API_BASE = 'http://localhost:3000';
-const USER_ID = 'user123'; // Replace with real logged-in user logic
+const USER_ID = 'user123';
 
-// DOM elements
 const packageSelect = document.getElementById('packages');
 const descriptionEl = document.getElementById('packageDescription');
 const orderDateInput = document.getElementById('orderDate');
@@ -15,15 +14,14 @@ const customDurationInput = document.getElementById('customDuration');
 const costPredictionEl = document.getElementById('costPrediction');
 const ordersTableBody = document.getElementById('ordersTableBody');
 let packagesCache = [];
+let hourlyRate;
 
-// Helper to GET from API
 async function apiGet(path) {
     const res = await fetch(`${API_BASE}${path}`);
     if (!res.ok) throw new Error('API error: ' + res.status);
     return res.json();
 }
 
-// Helper to POST to API
 async function apiPost(path, body) {
     const res = await fetch(`${API_BASE}${path}`, {
         method: 'POST',
@@ -34,12 +32,10 @@ async function apiPost(path, body) {
     return res.json();
 }
 
-// Load and render orders
 async function loadOrders() {
     try {
         const orders = await apiGet('/orders');
 
-        // show only this user's orders
         const myOrders = orders.filter(o => o.userId === USER_ID);
 
         ordersTableBody.innerHTML = '';
@@ -68,7 +64,6 @@ async function loadOrders() {
                 <td>${new Date(order.date).toLocaleString()}</td>
             `;
 
-            // simple status colors
             const statusCell = row.querySelector('.status');
             if (order.status === 'completed') statusCell.style.color = 'green';
             else if (order.status === 'pending') statusCell.style.color = 'orange';
@@ -105,7 +100,6 @@ async function loadPackages() {
     }
 }
 
-// Render options in the select dropdown
 function renderPackages() {
     packageSelect.innerHTML = '';
     packagesCache.forEach(pkg => {
@@ -118,7 +112,6 @@ function renderPackages() {
     });
 }
 
-// Get currently selected package
 function getSelectedPackage() {
     const id = packageSelect.value;
     return packagesCache.find(p => p.id === id);
@@ -129,7 +122,6 @@ async function getRateFor(rateId) {
     return data.find(r => r.id == rateId).costPer;
 }
 
-// Update UI based on selected package
 async function updateUI() {
     const pkg = getSelectedPackage();
     descriptionEl.textContent = pkg ? pkg.description : '';
@@ -145,7 +137,6 @@ async function updateUI() {
     await updateCostPrediction();
 }
 
-// Update cost prediction dynamically
 async function updateCostPrediction() {
     const pkg = getSelectedPackage();
 
@@ -165,7 +156,6 @@ async function updateCostPrediction() {
     }
     let duration, cost;
 
-    const hourlyRate = await getRateFor("hourly");
 
     if (pkg.id === 'custom') {
         duration = parseFloat(customDurationInput.value);
@@ -190,7 +180,6 @@ async function updateCostPrediction() {
     }
 }
 
-// Place an order
 async function placeOrder() {
     const pkg = getSelectedPackage();
     const datetime = orderDateInput.value;
@@ -233,9 +222,11 @@ async function placeOrder() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     loadPackages();
     loadOrders();
+
+    hourlyRate = await getRateFor("hourly");
 
     packageSelect.addEventListener('change', updateUI);
     gardenSizeInput.addEventListener('input', updateCostPrediction);
