@@ -67,6 +67,35 @@ app.get('/orders', async (req, res) => {
   }
 });
 
+app.delete('/api/orders/:id', async (req, res) => {
+  try {
+    const orderId = parseInt(req.params.id);
+    
+    // 1. Read the current file
+    const raw = await fs.readFile(ordersPath, 'utf-8');
+    const db = JSON.parse(raw);
+
+    // 2. Check if the order exists
+    const initialLength = db.orders.length;
+    
+    // 3. Filter the list: keep everything EXCEPT the order with the specified ID
+    db.orders = db.orders.filter(order => order.id !== orderId);
+
+    // 4. Check if something was actually removed
+    if (db.orders.length === initialLength) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    // 5. Save the updated file
+    await fs.writeFile(ordersPath, JSON.stringify(db, null, 2));
+
+    res.status(200).json({ message: 'Order successfully deleted' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error while deleting the order' });
+  }
+});
+
 app.listen(PORT, () =>
   console.log(`Server running on http://localhost:${PORT}`)
 );
