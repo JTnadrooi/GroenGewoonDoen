@@ -223,8 +223,8 @@ async function placeOrder() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    loadPackages();
-    loadOrders();
+    await loadPackages();
+    await loadOrders();
 
     hourlyRate = await getRateFor("hourly");
 
@@ -232,4 +232,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     gardenSizeInput.addEventListener('input', updateCostPrediction);
     customDurationInput.addEventListener('input', updateCostPrediction);
     placeOrderBtn.addEventListener('click', placeOrder);
+
+    await updateCostPrediction();
 });
