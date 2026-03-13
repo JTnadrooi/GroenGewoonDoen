@@ -11,6 +11,7 @@ app.use(express.json());
 
 const packagesPath = path.join(__dirname, '../data/packages.json');
 const ordersPath = path.join(__dirname, '../data/orders.json');
+const ratesPath = path.join(__dirname, '../data/rates.json');
 
 app.get('/packages', async (req, res) => {
   try {
@@ -24,7 +25,7 @@ app.get('/packages', async (req, res) => {
 
 app.post('/orders', async (req, res) => {
   try {
-    const { userId, duration } = req.body;
+    const { userId, duration, date } = req.body;
 
     if (!userId || typeof duration !== 'number') {
       return res.status(400).json({ error: 'Invalid order data' });
@@ -41,8 +42,8 @@ app.post('/orders', async (req, res) => {
     const newOrder = {
       id: Date.now(),
       userId,
-      duration, // in decimal hours
-      date: new Date().toISOString()
+      duration, // in decimal hours.
+      date: date
     };
 
     db.orders.push(newOrder);
@@ -93,6 +94,17 @@ app.delete('/api/orders/:id', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Error while deleting the order' });
+  }
+});
+
+app.get('/rates', async (req, res) => {
+  try {
+    const raw = await fs.readFile(ratesPath, 'utf-8');
+    const db = JSON.parse(raw);
+    res.json(db.rates || []);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to load rates' });
   }
 });
 
