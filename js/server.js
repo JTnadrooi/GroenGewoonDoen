@@ -9,6 +9,10 @@ const fs = require('fs');
 const crypto = require('crypto');
 
 const usersFile = path.join(__dirname, '..', 'data', 'users.json');
+const ADMIN_EMAIL = 'bitch@gmail.com';
+
+// Session storage (simple in-memory, replace with database in production)
+const sessions = {};
 
 function readUsers() {
   try {
@@ -29,8 +33,20 @@ function hashPassword(password, salt) {
   return { salt: salt, hash: hash };
 }
 
+// Middleware to check if user is logged in as admin
+function requireAdmin(req, res, next) {
+  const sessionId = req.headers['x-session-id'] || req.cookies?.sessionId;
+  const userEmail = sessions[sessionId];
+  
+  if (!userEmail || userEmail !== ADMIN_EMAIL) {
+    return res.status(403).json({ message: 'Admin access required' });
+  }
+  next();
+}
+
 app.use(cors());
 app.use(express.json());
+app.use(express.static(path.join(__dirname, '..')));
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "..", "html", "index.html"));
@@ -52,7 +68,7 @@ app.post('/newuser', (req, res) => {
   var h = hashPassword(password);
   users[email] = { name: name || '', hash: h.hash, salt: h.salt };
   writeUsers(users);
-  return res.json({ redirect: '/login' });
+  return res.json({ redirect: '/html/login.html' });
 });
 
 app.post('/login', (req, res) => {
@@ -69,7 +85,31 @@ app.post('/login', (req, res) => {
   if (h.hash !== u.hash) {
     return res.status(401).json({ message: 'Invalid credentials' });
   }
-  return res.json({ redirect: '/admin' });
+  
+  // Create session
+  const sessionId = crypto.randomBytes(32).toString('hex');
+  sessions[sessionId] = email;
+  
+  return res.json({ 
+    redirect: email === ADMIN_EMAIL ? '/html/admin.html' : '/html/user.html',
+    sessionId: sessionId
+  });
+});
+
+app.get('/html/login.html', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'html', 'login.html'));
+});
+
+app.get('/html/signup.html', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'html', 'signup.html'));
+});
+
+app.get('/html/admin.html', requireAdmin, (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'html', 'admin.html'));
+});
+
+app.get('/html/user.html', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'html', 'user.html'));
 });
 
 const packagesPath = path.join(__dirname, '../data/packages.json');
@@ -128,6 +168,25 @@ app.get('/orders', async (req, res) => {
     console.error(err);
     res.status(500).json({ error: 'Failed to load orders' });
   }
+});
+
+app.get('/rates', async (req, res) => {
+  try {
+    const raw = await fs.readFile(ratesPath, 'utf-8');
+    const db = JSON.parse(raw);
+    res.json(db.rates || []);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to load rates' });
+  }
+});
+
+app.post('/logout', (req, res) => {
+  const sessionId = req.headers['x-session-id'];
+  if (sessionId && sessions[sessionId]) {
+    delete sessions[sessionId];
+  }
+  res.json({ message: 'Logged out successfully' });
 });
 
 app.listen(PORT, () =>

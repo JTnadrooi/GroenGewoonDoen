@@ -6,6 +6,18 @@
   <title>Admin</title>
 
   <link rel="stylesheet" href="../css/styles.css" />
+  <script>
+    // Check if user has valid session before loading
+    (function() {
+      const sessionId = localStorage.getItem('sessionId');
+      if (!sessionId) {
+        window.location.href = '/html/login.html';
+        return;
+      }
+      // Store sessionId globally for use in fetch calls
+      window.sessionId = sessionId;
+    })();
+  </script>
   <script src="../js/FoldMenu.js" defer></script>
   <script src="../js/main.js" defer></script>
   <script src="../js/calendar.js" defer></script>

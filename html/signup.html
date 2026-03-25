@@ -37,7 +37,7 @@
       </form>
 
       <p class="muted">
-        Already have an account? <a href="/login">Log in</a><br>
+        Already have an account? <a href="/html/login.html">Log in</a><br>
         <a href="/">Back to homepage</a>
       </p>
     </section>
@@ -69,7 +69,7 @@
         }
 
         try {
-          var res = await fetch('/signup', {
+          var res = await fetch('/newuser', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name: name, email: email, password: password })
@@ -79,7 +79,7 @@
             throw new Error(err.message || 'Signup failed');
           }
           var data = await res.json().catch(function () { return {}; });
-          window.location.href = data.redirect || '/login';
+          window.location.href = data.redirect || '/html/login.html';
         } catch (e) {
           errorEl.textContent = e.message || 'Signup failed';
         }

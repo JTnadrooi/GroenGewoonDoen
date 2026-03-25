@@ -72,7 +72,10 @@
 					}
 
 					var data = await res.json().catch(function () { return {}; });
-					// server may return { redirect: '/admin.html' } on success
+					// Store session ID in localStorage
+					if (data.sessionId) {
+						localStorage.setItem('sessionId', data.sessionId);
+					}
 					window.location.href = data.redirect || '/';
 				} catch (e) {
 					errorEl.textContent = e.message || 'Login failed';

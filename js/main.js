@@ -18,23 +18,87 @@ let packagesCache = [];
 
 // Helper to GET from API
 async function apiGet(path) {
-    const res = await fetch(`${API_BASE}${path}`);
+    const headers = {};
+    const sessionId = window.sessionId || localStorage.getItem('sessionId');
+    if (sessionId) headers['x-session-id'] = sessionId;
+    
+    const res = await fetch(`${API_BASE}${path}`, { headers });
     if (!res.ok) throw new Error('API error: ' + res.status);
     return res.json();
 }
 
 // Helper to POST to API
 async function apiPost(path, body) {
+    const headers = { 'Content-Type': 'application/json' };
+    const sessionId = window.sessionId || localStorage.getItem('sessionId');
+    if (sessionId) headers['x-session-id'] = sessionId;
+    
     const res = await fetch(`${API_BASE}${path}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: headers,
         body: JSON.stringify(body)
     });
     if (!res.ok) throw new Error('POST failed: ' + res.status);
     return res.json();
 }
 
-// Load packages from API and render
+async function logout() {
+    try {
+        await apiPost('/logout', {});
+        localStorage.removeItem('sessionId');
+        window.location.href = '/html/login.html';
+    } catch (e) {
+        console.error('Logout failed:', e);
+        localStorage.removeItem('sessionId');
+        window.location.href = '/html/login.html';
+    }
+}
+
+async function loadOrders() {
+    try {
+        const orders = await apiGet('/orders');
+
+        const myOrders = orders.filter(o => o.userId === USER_ID);
+
+        ordersTableBody.innerHTML = '';
+
+        if (!myOrders.length) {
+            ordersTableBody.innerHTML = `
+                <tr>
+                    <td colspan="5" style="text-align:center">No orders yet</td>
+                </tr>
+            `;
+            return;
+        }
+
+        myOrders.forEach(order => {
+            const row = document.createElement('tr');
+
+            const quote = order.quote
+                ? `$${order.quote}`
+                : (order.duration ? `${order.duration.toFixed(2)}h` : '-');
+
+            row.innerHTML = `
+                <td>${order.id}</td>
+                <td>${order.packageName || '-'}</td>
+                <td>${quote}</td>
+                <td class="status">${order.status || 'pending'}</td>
+                <td>${new Date(order.date).toLocaleString()}</td>
+            `;
+
+            const statusCell = row.querySelector('.status');
+            if (order.status === 'completed') statusCell.style.color = 'green';
+            else if (order.status === 'pending') statusCell.style.color = 'orange';
+            else if (order.status === 'cancelled') statusCell.style.color = 'red';
+
+            ordersTableBody.appendChild(row);
+        });
+
+    } catch (err) {
+        console.error('Failed to load orders:', err);
+    }
+}
+
 async function loadPackages() {
     try {
         const data = await apiGet('/packages');
