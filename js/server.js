@@ -1,194 +1,442 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const crypto = require("crypto");
+const fs = require("fs/promises");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const fs = require('fs');
-const crypto = require('crypto');
+const ROOT_DIR = path.join(__dirname, "..");
+const HTML_DIR = path.join(ROOT_DIR, "html");
+const DATA_DIR = path.join(ROOT_DIR, "data");
 
-const usersFile = path.join(__dirname, '..', 'data', 'users.json');
-const ADMIN_EMAIL = 'bitch@gmail.com';
+const USERS_FILE = path.join(DATA_DIR, "users.json");
+const PACKAGES_FILE = path.join(DATA_DIR, "packages.json");
+const ORDERS_FILE = path.join(DATA_DIR, "orders.json");
+const RATES_FILE = path.join(DATA_DIR, "rates.json");
 
-// Session storage (simple in-memory, replace with database in production)
-const sessions = {};
+const ADMIN_EMAIL = "bitch@gmail.com";
+const SESSION_COOKIE_NAME = "sid";
 
-function readUsers() {
+const sessions = new Map();
+
+const allowedOrigins = new Set([
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "http://localhost:5500",
+  "http://127.0.0.1:5500"
+]);
+
+app.disable("x-powered-by");
+
+app.use(cors({
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.has(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error("Origin not allowed by CORS"));
+  },
+  credentials: true
+}));
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  next();
+});
+
+/*
+  Only expose public assets.
+  Do NOT expose the whole project root.
+*/
+app.use("/css", express.static(path.join(ROOT_DIR, "css")));
+app.use("/js", express.static(path.join(ROOT_DIR, "js")));
+app.use("/img", express.static(path.join(ROOT_DIR, "img")));
+app.use("/assets", express.static(path.join(ROOT_DIR, "assets")));
+
+/* -------------------- helpers -------------------- */
+
+function parseCookies(req) {
+  const raw = req.headers.cookie || "";
+  const cookies = {};
+
+  for (const part of raw.split(";")) {
+    const idx = part.indexOf("=");
+    if (idx === -1) continue;
+    const key = decodeURIComponent(part.slice(0, idx).trim());
+    const value = decodeURIComponent(part.slice(idx + 1).trim());
+    cookies[key] = value;
+  }
+
+  return cookies;
+}
+
+function getSessionId(req) {
+  const cookies = parseCookies(req);
+  return cookies[SESSION_COOKIE_NAME] || null;
+}
+
+function getCurrentEmail(req) {
+  const sessionId = getSessionId(req);
+  if (!sessionId) return null;
+
+  const session = sessions.get(sessionId);
+  return session ? session.email : null;
+}
+
+function setSessionCookie(res, sessionId) {
+  const parts = [
+    `${SESSION_COOKIE_NAME}=${encodeURIComponent(sessionId)}`,
+    "HttpOnly",
+    "Path=/",
+    "SameSite=Lax"
+  ];
+
+  if (process.env.NODE_ENV === "production") {
+    parts.push("Secure");
+  }
+
+  res.setHeader("Set-Cookie", parts.join("; "));
+}
+
+function clearSessionCookie(res) {
+  const parts = [
+    `${SESSION_COOKIE_NAME}=`,
+    "HttpOnly",
+    "Path=/",
+    "SameSite=Lax",
+    "Max-Age=0"
+  ];
+
+  if (process.env.NODE_ENV === "production") {
+    parts.push("Secure");
+  }
+
+  res.setHeader("Set-Cookie", parts.join("; "));
+}
+
+async function readJson(filePath, fallbackValue) {
   try {
-    var txt = fs.readFileSync(usersFile, 'utf8');
-    return JSON.parse(txt || '{}');
-  } catch (e) {
-    return {};
+    const raw = await fs.readFile(filePath, "utf8");
+    return JSON.parse(raw || JSON.stringify(fallbackValue));
+  } catch (err) {
+    if (err.code === "ENOENT") {
+      await writeJson(filePath, fallbackValue);
+      return fallbackValue;
+    }
+    throw err;
   }
 }
 
-function writeUsers(users) {
-  fs.writeFileSync(usersFile, JSON.stringify(users, null, 2), 'utf8');
+async function writeJson(filePath, value) {
+  await fs.mkdir(path.dirname(filePath), { recursive: true });
+  await fs.writeFile(filePath, JSON.stringify(value, null, 2), "utf8");
 }
 
 function hashPassword(password, salt) {
-  salt = salt || crypto.randomBytes(16).toString('hex');
-  var hash = crypto.pbkdf2Sync(password, salt, 100000, 64, 'sha512').toString('hex');
-  return { salt: salt, hash: hash };
+  const realSalt = salt || crypto.randomBytes(16).toString("hex");
+  const hash = crypto
+    .pbkdf2Sync(password, realSalt, 100000, 64, "sha512")
+    .toString("hex");
+
+  return { salt: realSalt, hash };
 }
 
-// Middleware to check if user is logged in as admin
-function requireAdmin(req, res, next) {
-  const sessionId = req.headers['x-session-id'] || req.cookies?.sessionId;
-  const userEmail = sessions[sessionId];
-  
-  if (!userEmail || userEmail !== ADMIN_EMAIL) {
-    return res.status(403).json({ message: 'Admin access required' });
+function safeHashCompare(a, b) {
+  try {
+    const aBuf = Buffer.from(a, "hex");
+    const bBuf = Buffer.from(b, "hex");
+
+    if (aBuf.length !== bBuf.length) return false;
+    return crypto.timingSafeEqual(aBuf, bBuf);
+  } catch {
+    return false;
   }
+}
+
+function wantsJson(req) {
+  const accept = req.get("accept") || "";
+  const contentType = req.get("content-type") || "";
+  return accept.includes("application/json") || contentType.includes("application/json");
+}
+
+function sendError(req, res, status, message) {
+  if (wantsJson(req)) {
+    return res.status(status).json({ message });
+  }
+  return res.status(status).send(message);
+}
+
+function sendRedirectOrJson(req, res, redirectTo) {
+  if (wantsJson(req)) {
+    return res.json({ redirect: redirectTo });
+  }
+  return res.redirect(303, redirectTo);
+}
+
+/* -------------------- auth middleware -------------------- */
+
+function requireAuthPage(req, res, next) {
+  const email = getCurrentEmail(req);
+  if (!email) {
+    return res.redirect(303, "/login");
+  }
+
+  req.user = {
+    email,
+    isAdmin: email === ADMIN_EMAIL
+  };
+
   next();
 }
 
-app.use(cors());
-app.use(express.json());
-app.use(express.static(path.join(__dirname, '..')));
+function requireAdminPage(req, res, next) {
+  const email = getCurrentEmail(req);
+  if (!email) {
+    return res.redirect(303, "/login");
+  }
 
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "..", "html", "index.html"));
+  if (email !== ADMIN_EMAIL) {
+    return res.status(403).send("Admin access required");
+  }
+
+  req.user = {
+    email,
+    isAdmin: true
+  };
+
+  next();
+}
+
+function requireAuthApi(req, res, next) {
+  const email = getCurrentEmail(req);
+  if (!email) {
+    return res.status(401).json({ message: "Login required" });
+  }
+
+  req.user = {
+    email,
+    isAdmin: email === ADMIN_EMAIL
+  };
+
+  next();
+}
+
+/* -------------------- health -------------------- */
+
+app.get("/health", (req, res) => {
+  res.json({ ok: true, port: PORT });
 });
 
 app.get("/message", (req, res) => {
   res.send("Ahoy!");
 });
 
-app.post('/newuser', (req, res) => {
-  var { name, email, password } = req.body || {};
-  if (!email || !password) {
-    return res.status(400).json({ message: 'Email and password required' });
-  }
-  var users = readUsers();
-  if (users[email]) {
-    return res.status(400).json({ message: 'Email already registered' });
-  }
-  var h = hashPassword(password);
-  users[email] = { name: name || '', hash: h.hash, salt: h.salt };
-  writeUsers(users);
-  return res.json({ redirect: '/html/login.html' });
+/* -------------------- page routes -------------------- */
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(HTML_DIR, "index.html"));
 });
 
-app.post('/login', (req, res) => {
-  var { email, password } = req.body || {};
-  if (!email || !password) {
-    return res.status(400).json({ message: 'Email and password required' });
-  }
-  var users = readUsers();
-  var u = users[email];
-  if (!u) {
-    return res.status(401).json({ message: 'Invalid credentials' });
-  }
-  var h = hashPassword(password, u.salt);
-  if (h.hash !== u.hash) {
-    return res.status(401).json({ message: 'Invalid credentials' });
-  }
-  
-  // Create session
-  const sessionId = crypto.randomBytes(32).toString('hex');
-  sessions[sessionId] = email;
-  
-  return res.json({ 
-    redirect: email === ADMIN_EMAIL ? '/html/admin.html' : '/html/user.html',
-    sessionId: sessionId
-  });
+app.get("/login", (req, res) => {
+  res.sendFile(path.join(HTML_DIR, "login.html"));
 });
 
-app.get('/html/login.html', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'html', 'login.html'));
+app.get("/signup", (req, res) => {
+  res.sendFile(path.join(HTML_DIR, "signup.html"));
 });
 
-app.get('/html/signup.html', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'html', 'signup.html'));
+app.get("/user", requireAuthPage, (req, res) => {
+  res.sendFile(path.join(HTML_DIR, "user.html"));
 });
 
-app.get('/html/admin.html', requireAdmin, (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'html', 'admin.html'));
+app.get("/admin", requireAdminPage, (req, res) => {
+  res.sendFile(path.join(HTML_DIR, "admin.html"));
 });
 
-app.get('/html/user.html', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'html', 'user.html'));
-});
+/* old URLs still work */
+app.get("/html/login.html", (req, res) => res.redirect(303, "/login"));
+app.get("/html/signup.html", (req, res) => res.redirect(303, "/signup"));
+app.get("/html/user.html", (req, res) => res.redirect(303, "/user"));
+app.get("/html/admin.html", (req, res) => res.redirect(303, "/admin"));
 
-const packagesPath = path.join(__dirname, '../data/packages.json');
-const ordersPath = path.join(__dirname, '../data/orders.json');
+/* -------------------- auth routes -------------------- */
 
-app.get('/packages', async (req, res) => {
+app.post("/newuser", async (req, res) => {
   try {
-    const data = await fs.readFile(packagesPath, 'utf-8');
-    res.json(JSON.parse(data));
+    const { name, email, password } = req.body || {};
+
+    if (!email || !password) {
+      return sendError(req, res, 400, "Email and password required");
+    }
+
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const users = await readJson(USERS_FILE, {});
+
+    if (users[normalizedEmail]) {
+      return sendError(req, res, 400, "Email already registered");
+    }
+
+    const hashed = hashPassword(String(password));
+
+    users[normalizedEmail] = {
+      name: name ? String(name).trim() : "",
+      hash: hashed.hash,
+      salt: hashed.salt
+    };
+
+    await writeJson(USERS_FILE, users);
+
+    return sendRedirectOrJson(req, res, "/login");
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to load packages' });
+    return sendError(req, res, 500, "Failed to create user");
   }
 });
 
-app.post('/orders', async (req, res) => {
+app.post("/login", async (req, res) => {
   try {
-    const { userId, duration } = req.body;
+    const { email, password } = req.body || {};
 
-    if (!userId || typeof duration !== 'number') {
-      return res.status(400).json({ error: 'Invalid order data' });
+    if (!email || !password) {
+      return sendError(req, res, 400, "Email and password required");
     }
 
-    let db;
-    try {
-      const raw = await fs.readFile(ordersPath, 'utf-8');
-      db = JSON.parse(raw);
-    } catch {
-      db = { orders: [] };
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const users = await readJson(USERS_FILE, {});
+    const user = users[normalizedEmail];
+
+    if (!user) {
+      return sendError(req, res, 401, "Invalid credentials");
     }
+
+    const hashed = hashPassword(String(password), user.salt);
+
+    if (!safeHashCompare(hashed.hash, user.hash)) {
+      return sendError(req, res, 401, "Invalid credentials");
+    }
+
+    const sessionId = crypto.randomBytes(32).toString("hex");
+
+    sessions.set(sessionId, {
+      email: normalizedEmail,
+      createdAt: Date.now()
+    });
+
+    setSessionCookie(res, sessionId);
+
+    const redirectTo = normalizedEmail === ADMIN_EMAIL ? "/admin" : "/user";
+    return sendRedirectOrJson(req, res, redirectTo);
+  } catch (err) {
+    console.error(err);
+    return sendError(req, res, 500, "Login failed");
+  }
+});
+
+app.post("/logout", (req, res) => {
+  const sessionId = getSessionId(req);
+
+  if (sessionId) {
+    sessions.delete(sessionId);
+  }
+
+  clearSessionCookie(res);
+
+  if (wantsJson(req)) {
+    return res.json({ message: "Logged out successfully", redirect: "/login" });
+  }
+
+  return res.redirect(303, "/login");
+});
+
+/* -------------------- data routes -------------------- */
+
+app.get("/me", requireAuthApi, async (req, res) => {
+  try {
+    const users = await readJson(USERS_FILE, {});
+    const current = users[req.user.email] || {};
+
+    res.json({
+      email: req.user.email,
+      name: current.name || "",
+      isAdmin: req.user.isAdmin
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to load profile" });
+  }
+});
+
+app.get("/packages", async (req, res) => {
+  try {
+    const data = await readJson(PACKAGES_FILE, []);
+    res.json(data);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to load packages" });
+  }
+});
+
+app.post("/orders", requireAuthApi, async (req, res) => {
+  try {
+    const duration = Number(req.body?.duration);
+
+    if (!Number.isFinite(duration)) {
+      return res.status(400).json({ error: "Invalid order data" });
+    }
+
+    const db = await readJson(ORDERS_FILE, { orders: [] });
 
     const newOrder = {
       id: Date.now(),
-      userId,
+      userId: req.user.email,
       duration,
       date: new Date().toISOString()
     };
 
     db.orders.push(newOrder);
-
-    await fs.writeFile(ordersPath, JSON.stringify(db, null, 2));
+    await writeJson(ORDERS_FILE, db);
 
     res.status(201).json(newOrder);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to save order' });
+    res.status(500).json({ error: "Failed to save order" });
   }
 });
 
-app.get('/orders', async (req, res) => {
+app.get("/orders", requireAuthApi, async (req, res) => {
   try {
-    const raw = await fs.readFile(ordersPath, 'utf-8');
-    const db = JSON.parse(raw);
-    res.json(db.orders || []);
+    const db = await readJson(ORDERS_FILE, { orders: [] });
+    const allOrders = Array.isArray(db.orders) ? db.orders : [];
+
+    if (req.user.isAdmin) {
+      return res.json(allOrders);
+    }
+
+    return res.json(allOrders.filter(order => order.userId === req.user.email));
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to load orders' });
+    res.status(500).json({ error: "Failed to load orders" });
   }
 });
 
-app.get('/rates', async (req, res) => {
+app.get("/rates", async (req, res) => {
   try {
-    const raw = await fs.readFile(ratesPath, 'utf-8');
-    const db = JSON.parse(raw);
-    res.json(db.rates || []);
+    const db = await readJson(RATES_FILE, { rates: [] });
+    if (Array.isArray(db)) {
+      return res.json(db);
+    }
+    return res.json(db.rates || []);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Failed to load rates' });
+    res.status(500).json({ error: "Failed to load rates" });
   }
 });
 
-app.post('/logout', (req, res) => {
-  const sessionId = req.headers['x-session-id'];
-  if (sessionId && sessions[sessionId]) {
-    delete sessions[sessionId];
-  }
-  res.json({ message: 'Logged out successfully' });
+app.listen(PORT, () => {
+  console.log(`Server running on http://127.0.0.1:${PORT}`);
 });
-
-app.listen(PORT, () =>
-  console.log(`Server running on http://localhost:${PORT}`)
-);
