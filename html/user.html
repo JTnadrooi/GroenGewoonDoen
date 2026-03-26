@@ -30,16 +30,14 @@
 
     <p id="packageDescription"></p>
 
-    <!-- Garden size wrapper -->
     <div id="gardenSizeContainer">
       <label for="gardenSize">Garden Size (m²):</label>
       <input type="number" id="gardenSize" min="1" placeholder="Enter your garden size">
     </div>
 
-    <!-- Custom duration wrapper -->
     <div id="customDurationContainer" style="display:none;">
       <label for="customDuration">Custom Duration (hours):</label>
-      <input type="number" id="customDuration" min="0.5" step="0.1" placeholder="Enter duration in hours">
+      <input type="number" id="customDuration" min="1" placeholder="Enter duration in hours">
     </div>
 
     <p id="costPrediction"></p>
@@ -50,45 +48,31 @@
 
     <p id="orderInfo"></p>
   </main>
-
   <article data-fold>
     <h2>My Orders</h2>
-    <button>Order</button>
 
     <table style="width: 100%">
-      <tr>
-        <th>Order ID</th>
-        <th>Package / Info</th>
-        <th>Quote</th>
-        <th>Status</th>
-        <th>Date</th>
-      </tr>
-      <tr>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-      </tr>
+      <thead>
+        <tr>
+          <th>Order ID</th>
+          <th>Package / Info</th>
+          <th>Quote</th>
+          <th>Status</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+
+      <tbody id="ordersTableBody">
+      </tbody>
     </table>
   </article>
 
-  <!-- Make footer collapsible too if you want (optional).
-       Remove data-fold if you don't want it foldable. -->
   <footer data-fold>
     <p>Contact | Social Media | Disclaimer</p>
   </footer>
 
-  <a href="../admin.html">Go to admin page</a>
+  <a href="../html/admin.html">Go to admin page</a>
 
-  <!-- script -->
   <script src="../js/main.js"></script>
 </body>
 

@@ -1,7 +1,6 @@
 const API_BASE = 'http://localhost:3000';
-const USER_ID = 'user123'; // Replace with real logged-in user logic
+const USER_ID = 'user123';
 
-// DOM elements
 const packageSelect = document.getElementById('packages');
 const descriptionEl = document.getElementById('packageDescription');
 const orderDateInput = document.getElementById('orderDate');
@@ -13,10 +12,10 @@ const gardenSizeInput = document.getElementById('gardenSize');
 const customDurationContainer = document.getElementById('customDurationContainer');
 const customDurationInput = document.getElementById('customDuration');
 const costPredictionEl = document.getElementById('costPrediction');
-
+const ordersTableBody = document.getElementById('ordersTableBody');
 let packagesCache = [];
+let hourlyRate;
 
-// Helper to GET from API
 async function apiGet(path) {
     const headers = {};
     const sessionId = window.sessionId || localStorage.getItem('sessionId');
@@ -27,7 +26,6 @@ async function apiGet(path) {
     return res.json();
 }
 
-// Helper to POST to API
 async function apiPost(path, body) {
     const headers = { 'Content-Type': 'application/json' };
     const sessionId = window.sessionId || localStorage.getItem('sessionId');
@@ -104,18 +102,16 @@ async function loadPackages() {
         const data = await apiGet('/packages');
         packagesCache = data.gardeningPackages || [];
 
-        // Always add "Custom" package
         const customPackage = {
             id: 'custom',
             name: 'Custom',
             description: 'Enter your own duration in hours',
-            costPerM2: 0 // no automatic cost
+            costPerM2: 0
         };
         packagesCache.push(customPackage);
 
         renderPackages();
 
-        // Select first package by default
         packageSelect.value = packagesCache[0].id;
         updateUI();
         updateCostPrediction();
@@ -124,7 +120,6 @@ async function loadPackages() {
     }
 }
 
-// Render options in the select dropdown
 function renderPackages() {
     packageSelect.innerHTML = '';
     packagesCache.forEach(pkg => {
@@ -137,14 +132,17 @@ function renderPackages() {
     });
 }
 
-// Get currently selected package
 function getSelectedPackage() {
     const id = packageSelect.value;
     return packagesCache.find(p => p.id === id);
 }
 
-// Update UI based on selected package
-function updateUI() {
+async function getRateFor(rateId) {
+    const data = await apiGet('/rates');
+    return data.find(r => r.id == rateId).costPer;
+}
+
+async function updateUI() {
     const pkg = getSelectedPackage();
     descriptionEl.textContent = pkg ? pkg.description : '';
 
@@ -156,11 +154,10 @@ function updateUI() {
         gardenSizeContainer.style.display = 'block';
     }
 
-    updateCostPrediction();
+    await updateCostPrediction();
 }
 
-// Update cost prediction dynamically
-function updateCostPrediction() {
+async function updateCostPrediction() {
     const pkg = getSelectedPackage();
 
     if (!pkg) {
@@ -168,24 +165,41 @@ function updateCostPrediction() {
         return;
     }
 
+    if (pkg.id === 'custom' && !customDurationInput.value.trim()) {
+        costPredictionEl.textContent = '';
+        return;
+    }
+
+    if (pkg.id !== 'custom' && !gardenSizeInput.value.trim()) {
+        costPredictionEl.textContent = '';
+        return;
+    }
+    let duration, cost;
+
+
     if (pkg.id === 'custom') {
-        const customDuration = parseFloat(customDurationInput.value);
-        costPredictionEl.textContent = (!isNaN(customDuration) && customDuration > 0)
-            ? `Custom duration: ${customDuration.toFixed(2)} hours`
-            : 'Enter your desired duration to see prediction';
+        duration = parseFloat(customDurationInput.value);
+
+        cost = hourlyRate * duration;
+
+        costPredictionEl.textContent =
+            `Estimated cost (excluding resources): $${cost.toFixed(2)}, Duration: ${duration.toFixed(2)} hours`;
     } else {
         const size = parseFloat(gardenSizeInput.value);
+
         if (isNaN(size) || size <= 0) {
             costPredictionEl.textContent = '';
             return;
         }
-        const cost = pkg.costPerM2 * size;
-        const duration = cost / 10;
-        costPredictionEl.textContent = `Estimated cost: $${cost.toFixed(2)}, Duration: ${duration.toFixed(2)} hours`;
+
+        duration = Math.ceil(size * 0.45);
+        cost = pkg.costPerM2 * size + hourlyRate * duration;
+
+        costPredictionEl.textContent =
+            `Estimated cost: $${cost.toFixed(2)}, Duration: ${duration.toFixed(2)} hours`;
     }
 }
 
-// Place an order
 async function placeOrder() {
     const pkg = getSelectedPackage();
     const datetime = orderDateInput.value;
@@ -221,17 +235,23 @@ async function placeOrder() {
         });
 
         orderInfo.textContent = `Order placed! ID: ${order.id}, Duration: ${duration.toFixed(2)}h, Date: ${new Date(order.date).toLocaleString()}`;
+
+        await loadOrders();
     } catch (err) {
         alert('Failed to place order: ' + err.message);
     }
 }
 
-// Event listeners
-document.addEventListener('DOMContentLoaded', () => {
-    loadPackages();
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadPackages();
+    await loadOrders();
+
+    hourlyRate = await getRateFor("hourly");
 
     packageSelect.addEventListener('change', updateUI);
     gardenSizeInput.addEventListener('input', updateCostPrediction);
     customDurationInput.addEventListener('input', updateCostPrediction);
     placeOrderBtn.addEventListener('click', placeOrder);
+
+    await updateCostPrediction();
 });
