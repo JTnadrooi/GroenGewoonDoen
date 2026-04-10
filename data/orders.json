@@ -1,3 +1,14 @@
 {
-  "orders": []
+  "orders": [
+    {
+      "id": 1774518461715,
+      "userId": "testemail@gmail.com",
+      "duration": 3,
+      "date": "2026-03-19T09:47:00.000Z",
+      "packageId": "basic",
+      "packageName": "Basic Lawn Care",
+      "gardenSize": 12,
+      "status": "pending"
+    }
+  ]
 }

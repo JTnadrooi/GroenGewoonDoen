@@ -1,42 +1,70 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <title>Admin</title>
-
-  <link rel="stylesheet" href="../css/styles.css" />
-  <script src="../js/FoldMenu.js" defer></script>
-  <script src="../js/main.js" defer></script>
-  <script src="../js/calendar.js" defer></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin Dashboard - GroenGewoonDoen</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="stylesheet" href="../css/styles.css">
 </head>
 
 <body>
-  <header data-fold>
-    <h2>Green & Just Do It</h2><br />
-    <p>Welcome admin!</p>
-    <p>Check your availability here!</p>
-  </header>
+  <main class="page-main">
+    <section class="login-card">
+      <h1>Admin calendar</h1>
 
-<div data-fold>
-  <h3>Availability Calendar</h3>
+      <div class="form-row">
+        <button type="button" class="btn-primary" onclick="logout()">Logout</button>
+      </div>
 
-  <table border="1" cellpadding="8" cellspacing="0">
-    <thead>
-      <tr>
-        <th>Day</th>
-        <th>Date</th>
-        <th>Status</th>
-        <th>Details</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody id="admin-calendar-body">
-      </tbody>
-  </table>
-</div>
-  <br><br>
-  <button>Logout</button>
+      <table>
+        <thead>
+          <tr>
+            <th>Day</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Details</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="admin-calendar-body"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script type="module">
+    import { apiFetch, getBackendOrigin } from "../js/api.js";
+
+    async function logout() {
+      try {
+        const result = await apiFetch("/logout", {
+          method: "POST",
+          headers: {
+            "Accept": "application/json"
+          }
+        });
+
+        const data = await result.res.json().catch(() => ({}));
+        window.location.href = result.origin + (data.redirect || "/login");
+      } catch (e) {
+        console.error("Logout failed:", e);
+
+        try {
+          const origin = await getBackendOrigin();
+          window.location.href = origin + "/login";
+        } catch {
+          window.location.href = "/html/login.html";
+        }
+      }
+    }
+
+    window.logout = logout;
+  </script>
+
+  <script src="../js/siteHeader.js"></script>
+  <script src="../js/foldmenu.js"></script>
+  <script src="../js/calendar.js"></script>
 </body>
 
 </html>
