@@ -5,6 +5,7 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>Login - GroenGewoonDoen</title>
+	<link rel="icon" type="image/png" href="/favicon.png">
 	<link rel="stylesheet" href="../css/styles.css">
 </head>
 
@@ -25,7 +26,7 @@
 
 				<div class="form-row">
 					<label class="inline"><input type="checkbox" id="remember" name="remember"> Remember me</label>
-					<button type="submit" class="btn-primary">Sign in</button>
+					<button id="loginButton" type="submit" class="btn-primary">Sign in</button>
 				</div>
 
 				<div id="error" class="form-error" aria-live="polite"></div>
@@ -33,53 +34,13 @@
 
 			<p class="muted">
 				<a href="/">Back to homepage</a> |
-				<a href="/html/signup.html">Create account</a>
+				<a href="/signup">Create account</a>
 			</p>
 		</section>
 	</main>
-	</header>
 
 	<script src="../js/siteHeader.js"></script>
-	<script>
-		// progressive client-side login handler
-		(function () {
-			var form = document.getElementById('loginForm');
-			var errorEl = document.getElementById('error');
-
-			form.addEventListener('submit', async function (ev) {
-				if (!window.fetch) return; // let browser submit form if fetch unavailable
-				ev.preventDefault();
-				errorEl.textContent = '';
-
-				var email = document.getElementById('email').value.trim();
-				var password = document.getElementById('password').value;
-
-				if (!email || !password) {
-					errorEl.textContent = 'Please enter email and password.';
-					return;
-				}
-
-				try {
-					var res = await fetch('/login', {
-						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify({ email: email, password: password })
-					});
-
-					if (!res.ok) {
-						var err = await res.json().catch(function () { return { message: res.statusText }; });
-						throw new Error(err.message || 'Login failed');
-					}
-
-					var data = await res.json().catch(function () { return {}; });
-					// server may return { redirect: '/admin.html' } on success
-					window.location.href = data.redirect || '/';
-				} catch (e) {
-					errorEl.textContent = e.message || 'Login failed';
-				}
-			});
-		})();
-	</script>
+	<script type="module" src="../js/login.js"></script>
 </body>
 
 </html>

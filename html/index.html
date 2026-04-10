@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Green & Just Do It</title>
 
+    <link rel="icon" type="image/png" href="/favicon.png">
     <link rel="stylesheet" href="../css/styles.css" />
 </head>
 
@@ -13,7 +14,7 @@
 
     <header data-fold>
         <h1>Green & Just Do It</h1>
-        <img src="../media/heleblijetuinman.png">
+        <img src="../media/heleblijetuinman.png" alt="Happy gardener">
         <p>Welcome to our garden service platform.</p>
         <p>Choose a package, request a quote, or log in to manage your orders.</p>
     </header>
@@ -29,16 +30,17 @@
 
     <section data-fold>
         <h2>Get Started</h2>
-        <button id="loginBtn">Login</button>
+        <button id="loginBtn" type="button">Login</button>
     </section>
 
     <footer data-fold>
         <p>Contact | Social Media | Disclaimer</p>
     </footer>
 
+    <script src="../js/foldmenu.js"></script>
     <script>
         document.getElementById("loginBtn").addEventListener("click", () => {
-            window.location.href = "user.html";
+            window.location.href = "/login";
         });
     </script>
 

@@ -1,174 +1,70 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <title>Admin</title>
-
-  <link rel="stylesheet" href="../css/styles.css" />
-  <script src="../js/FoldMenu.js" defer></script>
-  <script type="module" src="../js/main.js"></script>
-  <script src="../js/calendar.js" defer></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin Dashboard - GroenGewoonDoen</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="stylesheet" href="../css/styles.css">
 </head>
 
 <body>
-  <div data-fold>
-    <h3>Orders</h3>
-    <table border="1">
-      <thead>
-        <tr>
-          <th>Order ID</th>
-          <th>Tenant</th>
-          <th>Details</th>
-          <th>Offer ID</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>1, 1</td>
-          <td>1, 2</td>
-          <td>1, 3</td>
-          <td>1, 4</td>
-          <td>1, 5</td>
-          <td><button>Action</button></td>
-        </tr>
-        <tr>
-          <td>2, 1</td>
-          <td>2, 2</td>
-          <td>2, 3</td>
-          <td>2, 4</td>
-          <td>2, 5</td>
-          <td><button>Action</button></td>
-        </tr>
-        <tr>
-          <td>3, 1</td>
-          <td>3, 2</td>
-          <td>3, 3</td>
-          <td>3, 4</td>
-          <td>3, 5</td>
-          <td><button>Action</button></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+  <main class="page-main">
+    <section class="login-card">
+      <h1>Admin calendar</h1>
 
-  <div data-fold>
-    <h3>Packets</h3>
-    <table border="1">
-      <thead>
-        <tr>
-          <th>Packet ID</th>
-          <th>Tenant</th>
-          <th>Details</th>
-          <th>Offer ID</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>1, 1</td>
-          <td>1, 2</td>
-          <td>1, 3</td>
-          <td>1, 4</td>
-          <td>1, 5</td>
-          <td><button>Action</button></td>
-        </tr>
-        <tr>
-          <td>2, 1</td>
-          <td>2, 2</td>
-          <td>2, 3</td>
-          <td>2, 4</td>
-          <td>2, 5</td>
-          <td><button>Action</button></td>
-        </tr>
-        <tr>
-          <td>3, 1</td>
-          <td>3, 2</td>
-          <td>3, 3</td>
-          <td>3, 4</td>
-          <td>3, 5</td>
-          <td><button>Action</button></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+      <div class="form-row">
+        <button type="button" class="btn-primary" onclick="logout()">Logout</button>
+      </div>
 
-  <div data-fold>
-    <h3>Create Packet</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Day</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Details</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="admin-calendar-body"></tbody>
+      </table>
+    </section>
+  </main>
 
-    <label>
-      Name:
-      <input type="text" />
-    </label>
-    <br><br>
+  <script type="module">
+    import { apiFetch, getBackendOrigin } from "../js/api.js";
 
-    <label>
-      Description:
-      <input type="text" />
-    </label>
-    <br><br>
+    async function logout() {
+      try {
+        const result = await apiFetch("/logout", {
+          method: "POST",
+          headers: {
+            "Accept": "application/json"
+          }
+        });
 
-    <label>
-      Price:
-      <input type="number" step="0.01" />
-    </label>
-    <br><br>
+        const data = await result.res.json().catch(() => ({}));
+        window.location.href = result.origin + (data.redirect || "/login");
+      } catch (e) {
+        console.error("Logout failed:", e);
 
-    <button>Save</button>
-  </div>
+        try {
+          const origin = await getBackendOrigin();
+          window.location.href = origin + "/login";
+        } catch {
+          window.location.href = "/html/login.html";
+        }
+      }
+    }
 
-  <div data-fold>
-    <h3>Delete Packet</h3>
+    window.logout = logout;
+  </script>
 
-    <label>
-      Name:
-      <input type="text" />
-    </label>
-    <br><br>
-
-    <button>Save</button>
-  </div>
-
-<div data-fold>
-  <h3>Availability Calendar</h3>
-
-  <table border="1" cellpadding="8" cellspacing="0">
-    <thead>
-      <tr>
-        <th>Day</th>
-        <th>Date</th>
-        <th>Status</th>
-        <th>Details</th>
-      </tr>
-    </thead>
-    <tbody id="admin-calendar-body">
-      </tbody>
-  </table>
-</div>
-
-  <div data-fold>
-    <h3>Tile Prices</h3>
-
-    <label>
-      Price per grass tile (m²):
-      <input type="number" step="0.01" />
-    </label>
-    <br><br>
-
-    <label>
-      Price per stone tile (m²):
-      <input type="number" step="0.01" />
-    </label>
-    <br><br>
-
-    <button>Save</button>
-  </div>
-
-  <br><br>
-  <button>Logout</button>
+  <script src="../js/siteHeader.js"></script>
+  <script src="../js/foldmenu.js"></script>
+  <script src="../js/calendar.js"></script>
 </body>
 
 </html>

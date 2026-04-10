@@ -1,38 +1,43 @@
-// Function to generate the dates of the current week (Mon to Sun)
+// Returns the dates for the current week from Monday to Sunday.
+// Each date is returned as a string in YYYY-MM-DD format.
 function getCurrentWeek() {
     const week = [];
     const today = new Date();
-    
-    // Find the Monday of the current week
-    const dayOfWeek = today.getDay(); 
-    const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); 
+
+    // Find the Monday of the current week.
+    // getDay() returns 0 for Sunday, 1 for Monday, and so on.
+    const dayOfWeek = today.getDay();
+    const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
     const monday = new Date(today.setDate(diff));
 
+    // Build the 7 dates of the week starting from Monday.
     for (let i = 0; i < 7; i++) {
         const nextDay = new Date(monday);
         nextDay.setDate(monday.getDate() + i);
-        // Format to YYYY-MM-DD
+
+        // Keep only the date part, not the time.
         week.push(nextDay.toISOString().split('T')[0]);
     }
+
     return week;
 }
 
+// Loads the current week's orders into the admin calendar table.
 async function updateAdminCalendar() {
     const tbody = document.getElementById('admin-calendar-body');
+
+    // Stop if this page does not contain the admin calendar table.
     if (!tbody) return;
 
     try {
-        // Fetch data from JSON file
-        const response = await fetch('../data/orders.json'); 
-        const jsonData = await response.json();
-        
-        // Pakt specifiek de 'orders' array uit je JSON
-        const customerOrders = jsonData.orders; 
+        // Load all orders from the backend.
+        const response = await fetch('http://localhost:3000/orders');
+        const customerOrders = await response.json();
 
         const datesToDisplay = getCurrentWeek();
         tbody.innerHTML = '';
-        
-        // Current date string for comparison
+
+        // Get today's date for checking whether a day is already in the past.
         const todayStr = new Date().toISOString().split('T')[0];
 
         datesToDisplay.forEach(dateStr => {
@@ -40,52 +45,82 @@ async function updateAdminCalendar() {
             const dayName = rowDate.toLocaleDateString('en-US', { weekday: 'long' });
             const dayNumber = rowDate.getDay(); // 0 = Sunday, 6 = Saturday
 
-            // Check if order exists. We split the order.date to ignore the time (e.g., T22:07:40.643Z)
+            // Find whether there is an order on this exact date.
             const existingOrder = customerOrders.find(order => {
                 const orderDateOnly = order.date.split('T')[0];
                 return orderDateOnly === dateStr;
             });
-            
+
             let status = 'Available';
             let details = '-';
             let rowStyle = '';
+            let actionButton = '-';
 
-            // LOGIC ORDER:
-            // 1. Check for Weekend
+            // Weekend days are marked as unavailable.
             if (dayNumber === 0 || dayNumber === 6) {
                 status = 'Weekend';
                 details = 'Not available';
                 rowStyle = 'background-color: #f0f0f0; color: #aaa; font-style: italic;';
-            } 
-            // 2. Check if there is an order for weekdays
+            }
+            // If there is an order on a weekday, mark it as occupied.
             else if (existingOrder) {
                 status = 'Occupied';
-                // Aangepast naar existingOrder.userId
                 details = `Client: ${existingOrder.userId} (ID: ${existingOrder.id})`;
                 rowStyle = 'background-color: #ffcccc; font-weight: bold;';
-            } 
-            // 3. Check if the date has passed
+                actionButton = `<button onclick="deleteOrder(${existingOrder.id})">Delete</button>`;
+            }
+            // If the date is in the past and still has no order, mark it as expired.
             else if (dateStr < todayStr) {
                 status = 'Expired';
                 rowStyle = 'color: #888; background-color: #f9f9f9;';
             }
 
             const tr = document.createElement('tr');
-            if (rowStyle) tr.setAttribute('style', rowStyle);
-            
+
+            if (rowStyle) {
+                tr.setAttribute('style', rowStyle);
+            }
+
             tr.innerHTML = `
                 <td>${dayName}</td>
                 <td>${dateStr}</td>
                 <td>${status}</td>
                 <td>${details}</td>
+                <td>${actionButton}</td>
             `;
+
             tbody.appendChild(tr);
         });
 
     } catch (error) {
         console.error("Error loading data:", error);
-        tbody.innerHTML = '<tr><td colspan="4">Error loading calendar data.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5">Error loading calendar data.</td></tr>';
     }
 }
 
+// Deletes one order by ID and refreshes the calendar afterwards.
+async function deleteOrder(orderId) {
+    // Ask for confirmation before deleting.
+    if (!confirm(`Are you sure you want to delete order ID ${orderId}?`)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`http://localhost:3000/api/orders/${orderId}`, {
+            method: 'DELETE'
+        });
+
+        if (response.ok) {
+            alert('Order successfully deleted!');
+            updateAdminCalendar();
+        } else {
+            alert('Something went wrong while deleting the order.');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Cannot reach the server.');
+    }
+}
+
+// Load the admin calendar as soon as the page is ready.
 document.addEventListener('DOMContentLoaded', updateAdminCalendar);

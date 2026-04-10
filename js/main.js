@@ -1,22 +1,36 @@
+// main.js talks to the backend through api.js.
+// apiFetch handles finding the working backend origin and sending requests there.
 import { apiFetch, getBackendOrigin } from "./api.js";
 
+// Stores the currently logged-in user once /me has been loaded.
 let currentUser = null;
+
+// Stores the package list loaded from the server.
+// A custom package is added on the frontend after loading.
 let packagesCache = [];
+
+// Stores the hourly rate loaded from /rates.
 let hourlyRate = 0;
 
+// Main page elements used by the order form.
 const packageSelect = document.getElementById("packages");
 const descriptionEl = document.getElementById("packageDescription");
 const orderDateInput = document.getElementById("orderDate");
 const placeOrderBtn = document.getElementById("placeOrderBtn");
 const orderInfo = document.getElementById("orderInfo");
 
+// Elements that are shown or hidden depending on the selected package.
 const gardenSizeContainer = document.getElementById("gardenSizeContainer");
 const gardenSizeInput = document.getElementById("gardenSize");
 const customDurationContainer = document.getElementById("customDurationContainer");
 const customDurationInput = document.getElementById("customDuration");
 const costPredictionEl = document.getElementById("costPrediction");
+
+// Table body where the user's orders are displayed.
 const ordersTableBody = document.getElementById("ordersTableBody");
 
+// Sends a GET request to the backend and returns parsed JSON.
+// If the backend says 401, return a special object instead of throwing.
 async function apiGet(path) {
   const result = await apiFetch(path, {
     method: "GET",
@@ -38,6 +52,8 @@ async function apiGet(path) {
   return res.json();
 }
 
+// Sends a POST request with JSON and returns parsed JSON.
+// Just like apiGet, a 401 becomes a special object instead of a thrown error.
 async function apiPost(path, body) {
   const result = await apiFetch(path, {
     method: "POST",
@@ -61,8 +77,11 @@ async function apiPost(path, body) {
   return res.json();
 }
 
+// Loads the current user profile from /me.
+// If the user is not logged in, currentUser becomes null.
 async function getCurrentUser() {
   const data = await apiGet("/me");
+
   if (data && data.__unauthorized) {
     currentUser = null;
     return null;
@@ -72,6 +91,8 @@ async function getCurrentUser() {
   return currentUser;
 }
 
+// Logs the user out through the backend and then redirects to the login page.
+// If the request fails, it still tries to redirect safely.
 async function logout() {
   try {
     const result = await apiFetch("/logout", {
@@ -98,6 +119,8 @@ async function logout() {
   }
 }
 
+// Loads the user's orders and fills the orders table.
+// If the user is not logged in, a friendly message is shown instead.
 async function loadOrders() {
   if (!ordersTableBody) return;
 
@@ -113,6 +136,7 @@ async function loadOrders() {
       return;
     }
 
+    // The backend already returns the current user's own orders.
     const myOrders = Array.isArray(orders) ? orders : [];
 
     ordersTableBody.innerHTML = "";
@@ -129,6 +153,7 @@ async function loadOrders() {
     myOrders.forEach(function (order) {
       const row = document.createElement("tr");
 
+      // Show a quote if present, otherwise show the duration.
       const quote = order.quote
         ? `$${Number(order.quote).toFixed(2)}`
         : (order.duration ? `${Number(order.duration).toFixed(2)}h` : "-");
@@ -141,7 +166,9 @@ async function loadOrders() {
         <td>${order.date ? new Date(order.date).toLocaleString() : "-"}</td>
       `;
 
+      // Color the status for easier reading.
       const statusCell = row.querySelector(".status");
+
       if (statusCell) {
         if (order.status === "completed") statusCell.style.color = "green";
         else if (order.status === "pending") statusCell.style.color = "orange";
@@ -161,6 +188,7 @@ async function loadOrders() {
   }
 }
 
+// Loads the package list from the server and adds a custom package option.
 async function loadPackages() {
   if (!packageSelect) return;
 
@@ -171,12 +199,14 @@ async function loadPackages() {
       return;
     }
 
+    // Support both a plain array and an object with gardeningPackages.
     if (Array.isArray(data)) {
       packagesCache = data.slice();
     } else {
       packagesCache = (data && data.gardeningPackages) ? data.gardeningPackages.slice() : [];
     }
 
+    // Add the custom package option manually on the frontend.
     const customPackage = {
       id: "custom",
       name: "Custom",
@@ -188,6 +218,7 @@ async function loadPackages() {
 
     renderPackages();
 
+    // Select the first package by default if any exist.
     if (packagesCache.length > 0) {
       packageSelect.value = packagesCache[0].id;
     }
@@ -199,6 +230,7 @@ async function loadPackages() {
   }
 }
 
+// Renders the package dropdown from packagesCache.
 function renderPackages() {
   if (!packageSelect) return;
 
@@ -207,6 +239,7 @@ function renderPackages() {
   packagesCache.forEach(function (pkg) {
     const option = document.createElement("option");
     option.value = pkg.id;
+
     option.textContent = pkg.id === "custom"
       ? pkg.name
       : `${pkg.name} — $${Number(pkg.costPerM2 || 0).toFixed(2)}/m²`;
@@ -215,15 +248,18 @@ function renderPackages() {
   });
 }
 
+// Returns the package object that is currently selected in the dropdown.
 function getSelectedPackage() {
   if (!packageSelect) return null;
 
   const id = packageSelect.value;
+
   return packagesCache.find(function (p) {
     return p.id === id;
   }) || null;
 }
 
+// Loads the rates list and returns the numeric costPer value for the given rate ID.
 async function getRateFor(rateId) {
   const data = await apiGet("/rates");
 
@@ -239,6 +275,7 @@ async function getRateFor(rateId) {
   return match ? Number(match.costPer || 0) : 0;
 }
 
+// Updates the visible form fields and package description based on the selected package.
 async function updateUI() {
   const pkg = getSelectedPackage();
 
@@ -246,6 +283,7 @@ async function updateUI() {
     descriptionEl.textContent = pkg ? pkg.description : "";
   }
 
+  // The custom package uses a duration field instead of garden size.
   if (pkg && pkg.id === "custom") {
     if (customDurationContainer) customDurationContainer.style.display = "block";
     if (gardenSizeContainer) gardenSizeContainer.style.display = "none";
@@ -257,6 +295,7 @@ async function updateUI() {
   await updateCostPrediction();
 }
 
+// Recalculates the estimated cost and duration shown to the user.
 async function updateCostPrediction() {
   const pkg = getSelectedPackage();
 
@@ -267,6 +306,7 @@ async function updateCostPrediction() {
     return;
   }
 
+  // If the required input is empty, do not show an estimate yet.
   if (pkg.id === "custom" && (!customDurationInput || !customDurationInput.value.trim())) {
     costPredictionEl.textContent = "";
     return;
@@ -300,6 +340,7 @@ async function updateCostPrediction() {
       return;
     }
 
+    // Keep the current formula exactly as it already works.
     duration = Math.ceil(size * 0.45);
     cost = Number(pkg.costPerM2 || 0) * size + hourlyRate * duration;
 
@@ -308,6 +349,7 @@ async function updateCostPrediction() {
   }
 }
 
+// Sends a new order to the backend using the current form values.
 async function placeOrder() {
   const pkg = getSelectedPackage();
   const datetime = orderDateInput ? orderDateInput.value : "";
@@ -317,8 +359,10 @@ async function placeOrder() {
     return;
   }
 
+  // Make sure the user is logged in before placing an order.
   if (!currentUser) {
     const me = await getCurrentUser();
+
     if (!me) {
       alert("Please log in before placing an order.");
       return;
@@ -343,6 +387,7 @@ async function placeOrder() {
       return;
     }
 
+    // Keep the existing duration formula exactly as it is.
     duration = (Number(pkg.costPerM2 || 0) * size) / 10;
   }
 
@@ -365,36 +410,25 @@ async function placeOrder() {
         `Order placed! ID: ${order.id}, Duration: ${duration.toFixed(2)}h, Date: ${new Date(order.date).toLocaleString()}`;
     }
 
+    // Refresh the orders table after placing a new order.
     await loadOrders();
   } catch (err) {
     alert("Failed to place order: " + err.message);
   }
 }
 
-document.addEventListener("DOMContentLoaded", async function () {
-  await getCurrentUser();
-  await loadPackages();
-  await loadOrders();
+// When the page is ready, load the initial data and connect the event handlers.
+document.addEventListener('DOMContentLoaded', async () => {
+    loadPackages();
+    loadOrders();
 
-  hourlyRate = await getRateFor("hourly");
+    hourlyRate = await getRateFor("hourly");
 
-  if (packageSelect) {
-    packageSelect.addEventListener("change", updateUI);
-  }
-
-  if (gardenSizeInput) {
-    gardenSizeInput.addEventListener("input", updateCostPrediction);
-  }
-
-  if (customDurationInput) {
-    customDurationInput.addEventListener("input", updateCostPrediction);
-  }
-
-  if (placeOrderBtn) {
-    placeOrderBtn.addEventListener("click", placeOrder);
-  }
-
-  await updateCostPrediction();
+    packageSelect.addEventListener('change', updateUI);
+    gardenSizeInput.addEventListener('input', updateCostPrediction);
+    customDurationInput.addEventListener('input', updateCostPrediction);
+    placeOrderBtn.addEventListener('click', placeOrder);
 });
 
+// Expose logout globally so inline HTML can call it if needed.
 window.logout = logout;
